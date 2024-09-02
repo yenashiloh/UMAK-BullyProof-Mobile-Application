@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'screens/home_screen.dart';
+import 'screens/report_screen.dart';
+import 'screens/seek_help_screen.dart';
+import 'screens/notification_screen.dart';
+import 'screens/profile_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -27,18 +32,55 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
-  static const List<Widget> _pages = [
-    HomeScreen(),
-    ReportScreen(),
-    HelpScreen(),
-    NotificationScreen(),
-    ProfileScreen(),
-  ];
+  void _onPageSelected(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/logo.png',
+              height: 60,
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'BullyProof',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Color(0xFF1A4594),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFFF7F2FA),
+        elevation: 0, // Ensure no shadow effect
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          HomeScreen(
+            onReportButtonPressed: () {
+              _onPageSelected(1);
+            },
+            onSeekHelpButtonPressed: () {
+              _onPageSelected(2);
+            },
+          ),
+          const ReportScreen(),
+          const SeekHelpScreen(),
+          const NotificationScreen(),
+          const ProfileScreen(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -46,8 +88,7 @@ class _HomePageState extends State<HomePage> {
             _currentIndex = index;
           });
         },
-     selectedItemColor: const Color(0xFF1A4594),
- 
+        selectedItemColor: const Color(0xFF1A4594),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         items: [
@@ -94,12 +135,11 @@ class _HomePageState extends State<HomePage> {
   }) {
     return BottomNavigationBarItem(
       icon: Container(
-        padding: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.only(bottom: 5),
         decoration: BoxDecoration(
           border: _currentIndex == index
               ? const Border(
-                 bottom: BorderSide(color: Color(0xFF1A4594), width: 2),
-
+                  bottom: BorderSide(color: Color(0xFF1A4594), width: 2),
                 )
               : null,
         ),
@@ -109,68 +149,12 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.only(bottom: 4),
         decoration: const BoxDecoration(
           border: Border(
-           bottom: BorderSide(color: Color(0xFF1A4594), width: 2),
-
+            bottom: BorderSide(color: Color(0xFF1A4594), width: 2),
           ),
         ),
         child: activeIcon,
       ),
       label: label,
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Home Screen'),
-    );
-  }
-}
-
-class ReportScreen extends StatelessWidget {
-  const ReportScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Report Screen'),
-    );
-  }
-}
-
-class HelpScreen extends StatelessWidget {
-  const HelpScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Help Screen'),
-    );
-  }
-}
-
-class NotificationScreen extends StatelessWidget {
-  const NotificationScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Notification Screen'),
-    );
-  }
-}
-
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Profile Screen'),
     );
   }
 }
