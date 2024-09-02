@@ -26,10 +26,10 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   void _onPageSelected(int index) {
@@ -49,7 +49,6 @@ class _HomePageState extends State<HomePage> {
               'assets/logo.png',
               height: 60,
             ),
-            const SizedBox(width: 10),
             const Text(
               'BullyProof',
               style: TextStyle(
@@ -62,7 +61,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         backgroundColor: const Color(0xFFF7F2FA),
-        elevation: 0, // Ensure no shadow effect
+        elevation: 0,
       ),
       body: IndexedStack(
         index: _currentIndex,
@@ -83,13 +82,10 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        selectedItemColor: const Color(0xFF1A4594),
-        unselectedItemColor: Colors.grey,
+        onTap: _onPageSelected,
+        backgroundColor: const Color(0xFF1A4594),
+        selectedItemColor: const Color(0xFFFFB731),
+        unselectedItemColor: Colors.white,
         type: BottomNavigationBarType.fixed,
         items: [
           _buildBottomNavigationBarItem(
@@ -149,7 +145,7 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.only(bottom: 4),
         decoration: const BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Color(0xFF1A4594), width: 2),
+            bottom: BorderSide(color: Color(0xFFFFB731), width: 2),
           ),
         ),
         child: activeIcon,

@@ -37,7 +37,8 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     TextSpan(
-                      text: 'Cyberbullying involves using technology to harass, intimidate, embarrass, or target someone. This includes online threats, hostile or rude texts, tweets, posts, or messages. It also covers sharing personal information, photos, or videos intended to harm or humiliate another person.\n\n',
+                      text:
+                          'Cyberbullying involves using technology to harass, intimidate, embarrass, or target someone. This includes online threats, hostile or rude texts, tweets, posts, or messages. It also covers sharing personal information, photos, or videos intended to harm or humiliate another person.\n\n',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.black87,
@@ -52,7 +53,8 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     TextSpan(
-                      text: 'This law is applicable to school-related bullying, particularly between students, and includes instances occurring on social media. "Bullying" is defined as any severe or repeated actions by one or more students whether through written, verbal, or electronic communication, or physical acts or gestures, or a combination of these that result in actual harm or a reasonable fear of physical or emotional harm to another student, damage to their property, creation of a hostile school environment, violation of their rights, or significant disruption to the educational process. When these actions are carried out online, they are collectively referred to as "cyberbullying" (Sec. 2, RA 10627).',
+                      text:
+                          'This law is applicable to school-related bullying, particularly between students, and includes instances occurring on social media. "Bullying" is defined as any severe or repeated actions by one or more students whether through written, verbal, or electronic communication, or physical acts or gestures, or a combination of these that result in actual harm or a reasonable fear of physical or emotional harm to another student, damage to their property, creation of a hostile school environment, violation of their rights, or significant disruption to the educational process. When these actions are carried out online, they are collectively referred to as "cyberbullying" (Sec. 2, RA 10627).',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.black87,
@@ -98,7 +100,7 @@ class HomeScreen extends StatelessWidget {
   }) {
     return Card(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(5),
       ),
       elevation: 4,
       child: IntrinsicHeight(
@@ -114,8 +116,8 @@ class HomeScreen extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  bottomLeft: Radius.circular(10),
+                  topLeft: Radius.circular(5),
+                  bottomLeft: Radius.circular(5),
                 ),
               ),
               child: Icon(
@@ -151,8 +153,8 @@ class HomeScreen extends StatelessWidget {
                       child: TextButton(
                         onPressed: onButtonPressed,
                         style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFF1A4594),
-                          foregroundColor: Colors.white,
+                          backgroundColor: const Color(0xFFFFB731),
+                          foregroundColor: const Color(0xFF1A4594),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -175,7 +177,7 @@ class HomeScreen extends StatelessWidget {
 
   void _showDialog({
     required BuildContext context,
-    required RichText content,
+    required Widget content,
   }) {
     showDialog(
       context: context,
@@ -184,13 +186,20 @@ class HomeScreen extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
-          content: content,
-          actions: [
+          contentPadding: const EdgeInsets.all(16.0),
+          content: Padding(
+            padding: const EdgeInsets.only(top: 16.0),
+            child: content,
+          ),
+          actions: <Widget>[
             TextButton(
+              child: const Text(
+                'Close',
+                style: TextStyle(color: Color(0xFF1A4594)),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Close'),
             ),
           ],
         );
