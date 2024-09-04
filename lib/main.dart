@@ -96,14 +96,14 @@ class HomePageState extends State<HomePage> {
           ),
           _buildBottomNavigationBarItem(
             index: 1,
-            icon: const Icon(Icons.report_outlined),
-            activeIcon: const Icon(Icons.report),
+            icon: const Icon(Icons.description_outlined),
+            activeIcon: const Icon(Icons.description_outlined),
             label: 'Report',
           ),
           _buildBottomNavigationBarItem(
             index: 2,
-            icon: const Icon(Icons.help_outline),
-            activeIcon: const Icon(Icons.help),
+            icon: const Icon(Icons.calendar_today),
+            activeIcon: const Icon(Icons.calendar_today),
             label: 'Seek Help',
           ),
           _buildBottomNavigationBarItem(

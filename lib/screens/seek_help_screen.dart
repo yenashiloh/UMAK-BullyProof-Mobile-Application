@@ -166,7 +166,7 @@ class SeekHelpScreenState extends State<SeekHelpScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 Card(
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15)),

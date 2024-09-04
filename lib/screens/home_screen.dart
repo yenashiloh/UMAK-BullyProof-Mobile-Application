@@ -68,7 +68,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _buildCard(
             context: context,
-            icon: Icons.report_outlined,
+            icon: Icons.description_outlined,
             title: 'Report Cyberbullying',
             description:
                 'If you are experiencing cyberbullying, you can report it to us. Our team is dedicated to addressing cases of online harassment and creating a safer environment for all users.',
@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _buildCard(
             context: context,
-            icon: Icons.help_outline,
+            icon: Icons.psychology_outlined,
             title: 'Counselling Support',
             description:
                 'If you or someone you know is experiencing the distress of cyberbullying, you are not alone. Our dedicated team of trained counselors is here to provide a safe, confidential space for you to share your experiences and feelings.',
