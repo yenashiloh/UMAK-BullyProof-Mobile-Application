@@ -421,7 +421,6 @@ Step _buildCyberbullyingDetailsStep() {
     content: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Platform or Medium Used for Cyberbullying
         const Text(
           'Platform or Medium Used for Cyberbullying:',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -429,7 +428,7 @@ Step _buildCyberbullyingDetailsStep() {
         Column(
           children: platforms.map((platform) {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.0), // Reduced vertical padding
+              padding: const EdgeInsets.symmetric(vertical: 2.0), 
               child: CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
