@@ -52,11 +52,11 @@ Widget build(BuildContext context) {
             primary: const Color(0xFF1A4594),
             secondary: const Color(0xFF1A4594),
           ),
-          shadowColor: Colors.transparent, // Removes shadow from all widgets
+          shadowColor: Colors.transparent, 
         ),
         child: Stepper(
           type: StepperType.horizontal,
-          elevation: 0, // Ensures the stepper itself has no shadow
+          elevation: 0, 
           currentStep: _currentStep,
           onStepContinue: () {
             if (_currentStep < _steps.length - 1) {
@@ -229,7 +229,6 @@ Widget build(BuildContext context) {
     title: const Text(''),
     content: Column(
       children: [
-        // Relationship to Victim is now the first question
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(
             labelText: 'Relationship to Victim',
@@ -304,9 +303,8 @@ Widget build(BuildContext context) {
             return null;
           },
         ),
-        const SizedBox(height: 16), // Add spacing between fields
+        const SizedBox(height: 16), 
 
-        // Victim's Role in the School
         DropdownButtonFormField<String>(
           decoration: const InputDecoration(
             labelText: "Victim's Role in the School",
@@ -428,7 +426,7 @@ Step _buildCyberbullyingDetailsStep() {
         Column(
           children: platforms.map((platform) {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.0), 
+              padding: const EdgeInsets.symmetric(vertical: 0.0), 
               child: CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
@@ -474,9 +472,8 @@ Step _buildCyberbullyingDetailsStep() {
             ),
           ),
 
-        const SizedBox(height: 16), // Keep this for spacing between sections
+        const SizedBox(height: 16), 
 
-        // Type of Cyberbullying Involved
         const Text(
           'What type of cyberbullying was involved? (Check all that apply)',
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -484,7 +481,7 @@ Step _buildCyberbullyingDetailsStep() {
         Column(
           children: cyberbullyingTypes.map((type) {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2.0), // Reduced vertical padding
+              padding: const EdgeInsets.symmetric(vertical: 0.0), 
               child: CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 controlAffinity: ListTileControlAffinity.leading,
@@ -530,9 +527,7 @@ Step _buildCyberbullyingDetailsStep() {
             ),
           ),
 
-        const SizedBox(height: 16), // Keep this for spacing between sections
-
-        // Any validation or additional fields can be added here
+        const SizedBox(height: 16), 
       ],
     ),
     isActive: _currentStep >= 3,

@@ -135,7 +135,7 @@ class HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           border: _currentIndex == index
               ? const Border(
-                  bottom: BorderSide(color: Color(0xFF1A4594), width: 2),
+                  bottom: BorderSide(color: Color.fromARGB(255, 160, 190, 247), width: 2),
                 )
               : null,
         ),
