@@ -7,6 +7,11 @@ import 'screens/seek_help_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/profile_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'screens/home/home_screen.dart';
+import 'screens/report-incidents/report_screen.dart';
+import 'screens/seek-help/seek_help_screen.dart';
+import 'screens/notifications/notification_screen.dart';
+import 'screens/profile/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -125,7 +130,7 @@ class HomePageState extends State<HomePage> {
             index: 2,
             icon: const Icon(Icons.calendar_today),
             activeIcon: const Icon(Icons.calendar_today),
-            label: 'Seek Help',
+            label: 'Get Help',
           ),
           _buildBottomNavigationBarItem(
             index: 3,
