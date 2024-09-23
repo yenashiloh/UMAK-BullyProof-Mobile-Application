@@ -1,36 +1,57 @@
+import 'package:bully_proof_umak/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/report_screen.dart';
 import 'screens/seek_help_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/profile_screen.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('token');
+  runApp(MyApp(token: token));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? token;
+
+  const MyApp({@required this.token, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    bool isTokenValid = token != null && !JwtDecoder.isExpired(token!);
+
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Bottom Navigation Bar',
-      home: HomePage(),
+      title: 'BullyProof',
+      home: isTokenValid ? HomePage(token: token!) : const SplashScreen(),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String token;
+  const HomePage({required this.token, super.key});
 
   @override
   HomePageState createState() => HomePageState();
 }
 
 class HomePageState extends State<HomePage> {
+  late String email;
+
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    Map<String, dynamic> jwtDecodedToken = JwtDecoder.decode(widget.token);
+    email = jwtDecodedToken['email'] ?? "Unknown";
+  }
 
   void _onPageSelected(int index) {
     setState(() {
@@ -49,9 +70,9 @@ class HomePageState extends State<HomePage> {
               'assets/logo.png',
               height: 60,
             ),
-            const Text(
-              'BullyProof',
-              style: TextStyle(
+            Text(
+              email,
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
@@ -135,7 +156,8 @@ class HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           border: _currentIndex == index
               ? const Border(
-                  bottom: BorderSide(color: Color.fromARGB(255, 160, 190, 247), width: 2),
+                  bottom: BorderSide(
+                      color: Color.fromARGB(255, 160, 190, 247), width: 2),
                 )
               : null,
         ),
