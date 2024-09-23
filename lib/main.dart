@@ -1,17 +1,12 @@
 import 'package:bully_proof_umak/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/home_screen.dart';
-import 'screens/report_screen.dart';
-import 'screens/seek_help_screen.dart';
-import 'screens/notification_screen.dart';
-import 'screens/profile_screen.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/report-incidents/report_screen.dart';
 import 'screens/seek-help/seek_help_screen.dart';
 import 'screens/notifications/notification_screen.dart';
 import 'screens/profile/profile_screen.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
