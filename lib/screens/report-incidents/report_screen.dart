@@ -22,9 +22,18 @@ class _ReportScreenState extends State<ReportScreen> {
 
   final _victimNameController = TextEditingController();
   final _victimGradeYearLevelController = TextEditingController();
+  final _reportedTo = TextEditingController();
+  final _perpetratorName = TextEditingController();
+  final _perpetratorGradeYearLevel = TextEditingController();
+  final _describeActionsTaken = TextEditingController();
   String? _relationship;
   String? _victimRole;
   String? _hasReportedBefore;
+
+  final otherPlatformController = TextEditingController();
+  final otherCyberbullyingController = TextEditingController();
+  final witnessNamesController = TextEditingController();
+  final incidentDetailsController = TextEditingController();
 
   bool _agreedToPrivacyPolicy = false;
   String? _isAnonymous;
@@ -39,9 +48,20 @@ class _ReportScreenState extends State<ReportScreen> {
 
   void submitReport() async {
     var regBody = {
+      "victimRelationship": _relationship,
       "victimName": _victimNameController.text,
       "victimType": _victimRole,
       "gradeYearLevel": _victimGradeYearLevelController.text,
+      "hasReportedBefore": _hasReportedBefore,
+      "reportedTo": _reportedTo.text,
+      "platformUsed": selectedPlatforms,
+      "cyberbullyingType": selectedCyberbullyingTypes,
+      "incidentDetails": incidentDetailsController.text,
+      "perpetratorName": _perpetratorName.text,
+      "perpetratorRole": _perpetratorRole,
+      "perpetratorGradeYearLevel": _perpetratorGradeYearLevel.text,
+      "actionsTaken": _actionsTaken,
+      "describeActions": _describeActionsTaken.text,
     };
 
     // Retrieve the token
@@ -603,6 +623,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
+                    controller: _reportedTo,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -649,13 +670,7 @@ class _ReportScreenState extends State<ReportScreen> {
       'Others (Please Specify)'
     ];
 
-    final otherPlatformController = TextEditingController();
-    final otherCyberbullyingController = TextEditingController();
-    final witnessNamesController = TextEditingController();
-
     final List<String> witnessOptions = ['Yes', 'No'];
-
-    final incidentDetailsController = TextEditingController();
 
     return Step(
       title: const Text(''),
@@ -915,6 +930,7 @@ class _ReportScreenState extends State<ReportScreen> {
               )),
           const SizedBox(height: 8),
           TextFormField(
+            controller: _perpetratorName,
             decoration: const InputDecoration(
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1014,6 +1030,7 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: 8),
           TextFormField(
+            controller: _perpetratorGradeYearLevel,
             decoration: const InputDecoration(
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1181,6 +1198,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
+                    controller: _describeActionsTaken,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1293,7 +1311,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "Registration successful!",
+                    "Your report has been submitted!",
                     style: TextStyle(color: Colors.white, fontSize: 12),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
