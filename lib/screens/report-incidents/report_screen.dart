@@ -1,7 +1,11 @@
 // ignore_for_file: unused_local_variable
 
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:bully_proof_umak/config.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -17,16 +21,97 @@ class _ReportScreenState extends State<ReportScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _victimNameController = TextEditingController();
-  String? _selectedLanguage;
+  final _victimGradeYearLevelController = TextEditingController();
+  final _reportedTo = TextEditingController();
+  final _perpetratorName = TextEditingController();
+  final _perpetratorGradeYearLevel = TextEditingController();
+  final _describeActionsTaken = TextEditingController();
   String? _relationship;
   String? _victimRole;
   String? _hasReportedBefore;
+
+  final otherPlatformController = TextEditingController();
+  final otherCyberbullyingController = TextEditingController();
+  final witnessNamesController = TextEditingController();
+  final incidentDetailsController = TextEditingController();
 
   bool _agreedToPrivacyPolicy = false;
   String? _isAnonymous;
 
   List<String> selectedPlatforms = [];
   List<String> selectedCyberbullyingTypes = [];
+
+  Future<String?> getToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  void submitReport() async {
+    var regBody = {
+      "victimRelationship": _relationship,
+      "victimName": _victimNameController.text,
+      "victimType": _victimRole,
+      "gradeYearLevel": _victimGradeYearLevelController.text,
+      "hasReportedBefore": _hasReportedBefore,
+      "reportedTo": _reportedTo.text,
+      "platformUsed": selectedPlatforms,
+      "cyberbullyingType": selectedCyberbullyingTypes,
+      "incidentDetails": incidentDetailsController.text,
+      "perpetratorName": _perpetratorName.text,
+      "perpetratorRole": _perpetratorRole,
+      "perpetratorGradeYearLevel": _perpetratorGradeYearLevel.text,
+      "actionsTaken": _actionsTaken,
+      "describeActions": _describeActionsTaken.text,
+    };
+
+    // Retrieve the token
+    String? token = await getToken();
+
+    if (token == null) {
+      // Handle missing token case, maybe prompt user to log in
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Authentication token missing. Please log in.'),
+      ));
+      return;
+    }
+
+    var response = await http.post(
+      Uri.parse(report),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token", // Add the token in the header
+      },
+      body: jsonEncode(regBody),
+    );
+
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    var jsonResponse = jsonDecode(response.body);
+
+    if (jsonResponse['status']) {
+      // ignore: use_build_context_synchronously
+      _successMessage(context);
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: const Center(
+              child: Text("Registration failed!"),
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(bottom: 50),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -153,38 +238,38 @@ class _ReportScreenState extends State<ReportScreen> {
       //     isValid = false;
       //   }
       //   break;
-      case 3:
-        if (selectedPlatforms.isEmpty) {
-          _logger.warning('No platform selected');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Please select at least one platform')),
-          );
-          isValid = false;
-        }
-        if (selectedCyberbullyingTypes.isEmpty) {
-          _logger.warning('No cyberbullying type selected');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content:
-                    Text('Please select at least one type of cyberbullying')),
-          );
-          isValid = false;
-        }
-        if (!_formKey.currentState!.validate()) {
-          _logger.warning('Form validation failed');
-          isValid = false;
-        }
-        break;
-      default:
-        isValid = true;
+      // case 3:
+      //   if (selectedPlatforms.isEmpty) {
+      //     _logger.warning('No platform selected');
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       const SnackBar(
+      //           content: Text('Please select at least one platform')),
+      //     );
+      //     isValid = false;
+      //   }
+      //   if (selectedCyberbullyingTypes.isEmpty) {
+      //     _logger.warning('No cyberbullying type selected');
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       const SnackBar(
+      //           content:
+      //               Text('Please select at least one type of cyberbullying')),
+      //     );
+      //     isValid = false;
+      //   }
+      //   if (!_formKey.currentState!.validate()) {
+      //     _logger.warning('Form validation failed');
+      //     isValid = false;
+      //   }
+      //   break;
+      // default:
+      //   isValid = true;
     }
 
-    if (!isValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all required fields')),
-      );
-    }
+    // if (!isValid) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Please fill in all required fields')),
+    //   );
+    // }
 
     return isValid;
   }
@@ -469,6 +554,7 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: 8),
           TextFormField(
+            controller: _victimGradeYearLevelController,
             decoration: const InputDecoration(
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -537,6 +623,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
+                    controller: _reportedTo,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -583,13 +670,7 @@ class _ReportScreenState extends State<ReportScreen> {
       'Others (Please Specify)'
     ];
 
-    final otherPlatformController = TextEditingController();
-    final otherCyberbullyingController = TextEditingController();
-    final witnessNamesController = TextEditingController();
-
     final List<String> witnessOptions = ['Yes', 'No'];
-
-    final incidentDetailsController = TextEditingController();
 
     return Step(
       title: const Text(''),
@@ -750,11 +831,11 @@ class _ReportScreenState extends State<ReportScreen> {
               width: 880,
               child: ElevatedButton(
                 onPressed: () {},
-                child: const Text('Convert image to text'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 228, 228, 228),
                   foregroundColor: const Color.fromARGB(255, 44, 44, 44),
                 ),
+                child: const Text('Convert image to text'),
               ),
             ),
           ),
@@ -828,369 +909,422 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   //step 4
-  String? _perpetratorRole; 
-  String? _actionsTaken; 
-  bool _emotionalSupport = false; 
-  bool _legalSupport = false; 
+  String? _perpetratorRole;
+  String? _actionsTaken;
+  bool _emotionalSupport = false;
+  bool _legalSupport = false;
   bool _academicSupport = false;
   bool _otherSupport = false;
-  TextEditingController _otherSupportController = TextEditingController();
   bool _agreementChecked = false;
-
   Step _buildVictimInformationStep() {
-  return Step(
-    title: const Text(''),
-    content: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Perpetrator's Full Name
-        const Text("Perpetrator's Full Name",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 17.0,
-            )),
-        const SizedBox(height: 8),
-        TextFormField(
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 2.0),
-            ),
-            hintText: "Enter perpetrator's full name",
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter the perpetrator\'s name';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 20),
-
-        // Perpetrator's Role in the University
-        const Text("Perpetrator's Role in the University",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 17.0,
-            )),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 2.0),
-            ),
-          ),
-          hint: const Text('Select perpetrator\'s role'),
-          value: _perpetratorRole,
-          items: ['Student', 'Professor', 'School Staff', 'Other']
-              .map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _perpetratorRole = newValue;
-            });
-          },
-          validator: (value) =>
-              value == null ? 'Please select the perpetrator\'s role' : null,
-        ),
-        if (_perpetratorRole == 'Other')
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Please specify the perpetrator\'s role',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17.0,
-                    )),
-                const SizedBox(height: 8),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                    ),
-                    hintText: 'Enter the perpetrator\'s role',
-                  ),
-                  validator: (value) => value?.isEmpty ?? true
-                      ? 'Please specify the perpetrator\'s role'
-                      : null,
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 20),
-        const Text(
-          "Perpetrator’s Grade/Year Level or Position",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 17.0,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 2.0),
-            ),
-            hintText: "Enter perpetrator's grade/year level or position",
-          ),
-          validator: (value) => value?.isEmpty ?? true
-              ? 'Please enter the perpetrator\'s grade/year level or position'
-              : null,
-        ),
-        const SizedBox(height: 20),
-
-        // Have any actions been taken so far?
-         const Text(
-          'What type of support would you like to receive?',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 17.0,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Checkbox(
-                  value: _emotionalSupport,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _emotionalSupport = value ?? false;
-                    });
-                  },
-                ),
-                const Text(
-                  'Counseling for the victim',
-                  style: TextStyle(fontSize: 17.0),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Checkbox(
-                  value: _legalSupport,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _legalSupport = value ?? false;
-                    });
-                  },
-                ),
-                const Text(
-                  'Talk between the victim and perpetrator',
-                  style: TextStyle(fontSize: 17.0),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Checkbox(
-                  value: _academicSupport,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _academicSupport = value ?? false;
-                    });
-                  },
-                ),
-                const Text(
-                  'Disciplinary action against the perpetrator',
-                  style: TextStyle(fontSize: 16.0),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Checkbox(
-                  value: _otherSupport,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _otherSupport = value ?? false;
-                    });
-                  },
-                ),
-                const Text(
-                  'Other',
-                  style: TextStyle(fontSize: 17.0),
-                ),
-              ],
-            ),
-            if (_otherSupport)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                    ),
-                    hintText: 'Specify other support',
-                  ),
-                  validator: (value) =>
-                      value?.isEmpty ?? true ? 'Please specify other support' : null,
-                ),
+    return Step(
+      title: const Text(''),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Perpetrator's Full Name
+          const Text("Perpetrator's Full Name",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17.0,
+              )),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _perpetratorName,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
-          ],
-        ),
-        const SizedBox(height: 20),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 2.0),
+              ),
+              hintText: "Enter perpetrator's full name",
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the perpetrator\'s name';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
 
-        const Text('Have any actions been taken so far?',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 17.0,
-            )),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _actionsTaken,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 1.0),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey, width: 2.0),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16),
-          ),
-          hint: const Text('Select an option'),
-          items: ['Yes', 'No'].map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _actionsTaken = newValue;
-            });
-          },
-          validator: (value) =>
-              value == null ? 'Please select an option' : null,
-        ),
-        if (_actionsTaken == 'Yes')
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Please describe the actions taken',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17.0,
-                    )),
-                const SizedBox(height: 8),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                    ),
-                    hintText: 'Describe the actions taken',
-                  ),
-                  validator: (value) => value?.isEmpty ?? true
-                      ? 'Please describe the actions taken'
-                      : null,
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 50),
-        Row(
-          children: [
-            Checkbox(
-              value: _agreementChecked,
-              onChanged: (bool? value) {
-                setState(() {
-                  _agreementChecked = value ?? false;
-                });
-              },
-            ),
-            const Expanded(
-              child: Text(
-                'I agree that the above statements are true and accurate.',
-                style: TextStyle(
-                  fontSize: 17.0,
-                  color: Colors.black, 
-                ),
+          // Perpetrator's Role in the University
+          const Text("Perpetrator's Role in the University",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17.0,
+              )),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
             ),
-          ],
-        ),
-      ],
-    ),
+            hint: const Text('Select perpetrator\'s role'),
+            value: _perpetratorRole,
+            items: ['Student', 'Professor', 'School Staff', 'Other']
+                .map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _perpetratorRole = newValue;
+              });
+            },
+            validator: (value) =>
+                value == null ? 'Please select the perpetrator\'s role' : null,
+          ),
+          if (_perpetratorRole == 'Other')
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Please specify the perpetrator\'s role',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      hintText: 'Enter the perpetrator\'s role',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please specify the perpetrator\'s role'
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 20),
+          const Text(
+            "Perpetrator’s Grade/Year Level or Position",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 17.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _perpetratorGradeYearLevel,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 2.0),
+              ),
+              hintText: "Enter perpetrator's grade/year level or position",
+            ),
+            validator: (value) => value?.isEmpty ?? true
+                ? 'Please enter the perpetrator\'s grade/year level or position'
+                : null,
+          ),
+          const SizedBox(height: 20),
+
+          // Have any actions been taken so far?
+          const Text(
+            'What type of support would you like to receive?',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 17.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Checkbox(
+                    value: _emotionalSupport,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _emotionalSupport = value ?? false;
+                      });
+                    },
+                  ),
+                  const Text(
+                    'Counseling for the victim',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _legalSupport,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _legalSupport = value ?? false;
+                      });
+                    },
+                  ),
+                  const Text(
+                    'Talk between the victim and perpetrator',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _academicSupport,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _academicSupport = value ?? false;
+                      });
+                    },
+                  ),
+                  const Text(
+                    'Disciplinary action against the perpetrator',
+                    style: TextStyle(fontSize: 16.0),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _otherSupport,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _otherSupport = value ?? false;
+                      });
+                    },
+                  ),
+                  const Text(
+                    'Other',
+                    style: TextStyle(fontSize: 17.0),
+                  ),
+                ],
+              ),
+              if (_otherSupport)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      hintText: 'Specify other support',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please specify other support'
+                        : null,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          const Text('Have any actions been taken so far?',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17.0,
+              )),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _actionsTaken,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 2.0),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16),
+            ),
+            hint: const Text('Select an option'),
+            items: ['Yes', 'No'].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _actionsTaken = newValue;
+              });
+            },
+            validator: (value) =>
+                value == null ? 'Please select an option' : null,
+          ),
+          if (_actionsTaken == 'Yes')
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Please describe the actions taken',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _describeActionsTaken,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      hintText: 'Describe the actions taken',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please describe the actions taken'
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 50),
+          Row(
+            children: [
+              Checkbox(
+                value: _agreementChecked,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _agreementChecked = value ?? false;
+                  });
+                },
+              ),
+              const Expanded(
+                child: Text(
+                  'I agree that the above statements are true and accurate.',
+                  style: TextStyle(
+                    fontSize: 17.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
       isActive: _currentStep >= 3,
     );
   }
 
   void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      if (!_agreedToPrivacyPolicy) {
-        _logger.warning(
-            'Form submission attempted without agreeing to privacy policy');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Please agree to the privacy policy before submitting'),
-          ),
-        );
-        return;
-      }
-      _logger.info('Form submitted successfully');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Report submitted successfully')),
-      );
-    } else {
-      _logger.warning('Form validation failed');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all required fields')),
-      );
-    }
+    submitReport();
+    // if (_formKey.currentState!.validate()) {
+    //   if (!_agreedToPrivacyPolicy) {
+    //     _logger.warning(
+    //         'Form submission attempted without agreeing to privacy policy');
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       const SnackBar(
+    //         content:
+    //             Text('Please agree to the privacy policy before submitting'),
+    //       ),
+    //     );
+    //     return;
+    //   }
+    //   submitReport();
+    //   _logger.info('Form submitted successfully');
+    //   // ScaffoldMessenger.of(context).showSnackBar(
+    //   //   const SnackBar(content: Text('Report submitted successfully')),
+    //   // );
+
+    // } else {
+    //   _logger.warning('Form validation failed');
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(content: Text('Please fill in all required fields')),
+    //   );
+    // }
   }
 
   @override
   void dispose() {
     _victimNameController.dispose();
     super.dispose();
+  }
+
+  _successMessage(BuildContext context) {
+    return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Container(
+        padding: const EdgeInsets.all(8),
+        height: 80,
+        decoration: const BoxDecoration(
+          color: Color.fromARGB(255, 81, 146, 83),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        child: const Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 40,
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Success",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Your report has been submitted!",
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    ));
   }
 }
