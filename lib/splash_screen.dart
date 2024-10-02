@@ -17,15 +17,18 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(const Duration(seconds: 2), () {
       // ignore: use_build_context_synchronously
       Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OnBoardingScreen()));
+        MaterialPageRoute(builder: (_) => const OnBoardingScreen()),
+      );
     });
   }
 
   @override
   void dispose() {
     super.dispose();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-        overlays: SystemUiOverlay.values);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
   }
 
   @override
@@ -41,15 +44,7 @@ class _SplashScreenState extends State<SplashScreen> {
             children: [
               Image.asset(
                 'assets/ob_logo.png',
-                width: 130,
-              ),
-              const Text(
-                'BullyProof',
-                style: TextStyle(
-                  color: Color.fromRGBO(19, 56, 98, 1),
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                ),
+                width: 180,
               ),
             ],
           ),

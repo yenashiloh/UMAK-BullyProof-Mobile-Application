@@ -34,21 +34,63 @@ class _RegisterPageState extends State<RegisterPage> {
   bool isContactEmpty = false;
   bool isPasswordEmpty = false;
   bool isCPasswordEmpty = false;
+  bool _isPasswordFocused = false;
 
   String? _selectedRole;
 
   final List<String> _roles = ["Student", "Parent", "Professor", "Staff"];
+  List<String> _passwordErrors = [];
+
+  final FocusNode _passwordFocusNode = FocusNode();
+  bool _isPasswordValid = false;
 
   @override
   void initState() {
     super.initState();
-    // Add listener to cpasswordController
+    passwordController.addListener(_validatePassword);
     cpasswordController.addListener(_validatePasswords);
+
+    _passwordFocusNode.addListener(() {
+      setState(() {
+        _isPasswordFocused = _passwordFocusNode.hasFocus;
+        if (!_isPasswordFocused) {
+          _isPasswordValid = false;
+        }
+      });
+    });
   }
 
   void _validatePasswords() {
     setState(() {
       _doPasswordsMatch = passwordController.text == cpasswordController.text;
+    });
+    _validatePassword();
+  }
+
+  void _validatePassword() {
+    setState(() {
+      final password = passwordController.text;
+      List<String> errors = [];
+
+      if (password.length <= 8) {
+        errors.add("Password must be over 8 characters");
+      }
+      if (!RegExp(r'[A-Z]').hasMatch(password)) {
+        errors.add("Password must contain 1 uppercase letter");
+      }
+      if (!RegExp(r'[a-z]').hasMatch(password)) {
+        errors.add("Password must contain 1 lowercase letter");
+      }
+      if (!RegExp(r'[0-9]').hasMatch(password)) {
+        errors.add("Password must contain 1 number");
+      }
+      if (!RegExp(r'[!@#\$&*~]').hasMatch(password)) {
+        errors.add("Password must contain 1 special character");
+      }
+
+      // Update the state with the error messages
+      _passwordErrors = errors;
+      _isPasswordValid = errors.isEmpty;
     });
   }
 
@@ -100,7 +142,8 @@ class _RegisterPageState extends State<RegisterPage> {
     if (_isNotValidate ||
         _isContactInvalid ||
         _isRoleNotSelected ||
-        !_doPasswordsMatch) {
+        !_doPasswordsMatch ||
+        !_isPasswordValid) {
       return;
     }
 
@@ -130,21 +173,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     } else {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: const Center(
-              child: Text("Registration failed!"),
-            ),
-          ),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(bottom: 50),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      _errorMessage(context, jsonResponse['message'] ?? "Registration Failed");
     }
   }
 
@@ -156,6 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
     contactController.dispose();
     passwordController.dispose();
     cpasswordController.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -171,24 +201,23 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const SizedBox(height: 50),
                   Image.asset(
-                    'assets/ob_logo.png',
+                    'assets/user_logo.png',
                     width: 130,
                   ),
+                  const SizedBox(height: 50),
                   const Text(
-                    'BullyProof',
+                    "Create Account",
                     style: TextStyle(
-                      color: Color.fromRGBO(19, 56, 98, 1),
-                      fontSize: 32,
+                      color: Color(0xFF1E3A8A),
+                      fontSize: 25,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 5),
                   const Text(
-                    'Sign up',
+                    "Please fill the details and create account",
                     style: TextStyle(
-                      color: Color.fromRGBO(19, 56, 98, 1),
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -229,7 +258,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     labelText: 'Password',
                     hintText: '•••••••••••••',
                     obscureText: _obscurePassword,
-                    errorText: isPasswordEmpty ? "Field cannot be empty" : null,
+                    focusNode: _passwordFocusNode,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -239,7 +268,24 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       onPressed: _togglePasswordVisibility,
                     ),
+                    errorText: isPasswordEmpty ? "Field cannot be empty" : null,
                   ),
+                  const SizedBox(height: 5),
+                  if (_isPasswordFocused && !_isPasswordValid) ...[
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _passwordErrors.map((error) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 150.0),
+                          child: Text(
+                            error,
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 12),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   UserTextfield(
                     controller: cpasswordController,
@@ -291,18 +337,19 @@ class _RegisterPageState extends State<RegisterPage> {
                           fontWeight: FontWeight.w600,
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(10),
                           borderSide: const BorderSide(
                             color: Color.fromRGBO(21, 72, 137, 1),
                           ),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
                             color: Color.fromRGBO(21, 72, 137, 1),
                           ),
                         ),
                         contentPadding:
-                            const EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0),
+                            const EdgeInsets.fromLTRB(30.0, 22.0, 30.0, 22.0),
                         fillColor: Colors.white,
                         filled: true,
                         errorText: _isRoleNotSelected
@@ -332,8 +379,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         TextSpan(
                           text: "Login",
                           style: const TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E3A8A),
                           ),
                           recognizer: TapGestureRecognizer()
                             ..onTap = _onLoginPressed,
@@ -383,6 +429,54 @@ class _RegisterPageState extends State<RegisterPage> {
                   Text(
                     "Registration successful!",
                     style: TextStyle(color: Colors.white, fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    ));
+  }
+
+  void _errorMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Container(
+        padding: const EdgeInsets.all(8),
+        height: 80,
+        decoration: const BoxDecoration(
+          color: Color(0xFFBF5A4E),
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: 40,
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Registration Failed",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),

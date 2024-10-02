@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class HomeScreen extends StatelessWidget {
   final VoidCallback onReportButtonPressed;
   final VoidCallback onSeekHelpButtonPressed;
+  final String email;
 
   const HomeScreen({
     super.key,
     required this.onReportButtonPressed,
     required this.onSeekHelpButtonPressed,
+    required this.email,
   });
 
   @override
@@ -16,6 +18,23 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.all(9.0),
       child: ListView(
         children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 12.0, bottom: 10.0),
+            child: Text.rich(
+              TextSpan(
+                text: "Welcome, ", // Regular text
+                style: const TextStyle(fontSize: 20), // Style for the regular text
+                children: <TextSpan>[
+                  TextSpan(
+                    text: email, // Bold text
+                    style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold), // Style for the bold text
+                  ),
+                ],
+              ),
+            ),
+          ),
           _buildCard(
             context: context,
             icon: Icons.phone_iphone,

@@ -67,12 +67,12 @@ class HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/logo.png',
-              height: 60,
+              'assets/user_logo.png',
+              height: 45,
             ),
-            Text(
-              email,
-              style: const TextStyle(
+            const Text(
+              "BullyProof",
+              style: TextStyle(
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
@@ -94,6 +94,7 @@ class HomePageState extends State<HomePage> {
             onSeekHelpButtonPressed: () {
               _onPageSelected(2);
             },
+            email: email,
           ),
           const ReportScreen(),
           const SeekHelpScreen(),
