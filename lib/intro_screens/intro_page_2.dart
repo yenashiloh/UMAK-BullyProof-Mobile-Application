@@ -6,36 +6,44 @@ class IntroPage2 extends StatelessWidget {
     return Container(
       color: Colors.white,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 75),
-            child: Center(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: SizedBox(
               child: Image.asset(
-                'assets/ob_logo.png',
-                width: 130,
+                'assets/ob2.png',
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          const Text(
-            'BullyProof',
-            style: TextStyle(
-              color: Color.fromRGBO(19, 56, 98, 1),
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          Expanded(
+          const SizedBox(height: 10),
+          const Padding(
+            padding: EdgeInsets.all(25.0),
             child: Align(
-              alignment: Alignment.bottomCenter,
-              child: SizedBox(
-                width: double.infinity,
-                child: Image.asset(
-                  'assets/ob2.png',
-                  fit: BoxFit.cover,
-                ),
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Your Safety Comes First',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E3A8A),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'You can securely share your details with trusted authorities. Your information is safe with us.',
+                    textAlign: TextAlign.left,
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                ],
               ),
             ),
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );
