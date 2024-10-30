@@ -349,7 +349,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                         ),
                         contentPadding:
-                            const EdgeInsets.fromLTRB(30.0, 22.0, 30.0, 22.0),
+                            const EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0),
                         fillColor: Colors.white,
                         filled: true,
                         errorText: _isRoleNotSelected
@@ -363,7 +363,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 50),
                   RegisterBtn(
                     onPressed: registerUser,
                   ),

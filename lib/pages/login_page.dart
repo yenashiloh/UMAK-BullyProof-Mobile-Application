@@ -51,13 +51,12 @@ class _LoginPageState extends State<LoginPage> {
 
   void loginUser() async {
     setState(() {
-      isEmailEmpty = emailController.text.isEmpty; // Check if email is empty
+      isEmailEmpty = emailController.text.isEmpty;
       isPasswordEmpty =
-          passwordController.text.isEmpty; // Check if password is empty
+          passwordController.text.isEmpty;
     });
 
     if (!isEmailEmpty && !isPasswordEmpty) {
-      // Check if both fields are not empty
       var regBody = {
         "email": emailController.text,
         "password": passwordController.text,
@@ -90,11 +89,10 @@ class _LoginPageState extends State<LoginPage> {
         _errorMessage(context, jsonResponse['message'] ?? "Login Failed");
       }
     } else {
-      // If either field is empty, update the state to show error messages
       setState(() {
-        isEmailEmpty = emailController.text.isEmpty; // Check if email is empty
+        isEmailEmpty = emailController.text.isEmpty;
         isPasswordEmpty =
-            passwordController.text.isEmpty; // Check if password is empty
+            passwordController.text.isEmpty;
       });
     }
   }

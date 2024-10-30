@@ -1,9 +1,11 @@
 // ignore_for_file: unused_local_variable
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:bully_proof_umak/config.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -34,12 +36,42 @@ class _ReportScreenState extends State<ReportScreen> {
   final otherCyberbullyingController = TextEditingController();
   final witnessNamesController = TextEditingController();
   final incidentDetailsController = TextEditingController();
+  final otherSupportController = TextEditingController();
 
   bool _agreedToPrivacyPolicy = false;
-  String? _isAnonymous;
 
   List<String> selectedPlatforms = [];
   List<String> selectedCyberbullyingTypes = [];
+  List<String> selectedSupportTypes = [];
+
+  List<File> _images = [];
+  final picker = ImagePicker();
+
+  Future<void> getImage() async {
+    // Allow selecting multiple images
+    final pickedImages = await picker.pickMultiImage();
+    if (pickedImages.isNotEmpty) {
+      setState(() {
+        // Add selected images to the list
+        _images =
+            pickedImages.map((pickedImage) => File(pickedImage.path)).toList();
+      });
+    } else {
+      print("No images were picked.");
+    }
+  }
+
+  // Capture image from camera
+  Future<void> captureImage() async {
+    final pickedImage = await picker.pickImage(source: ImageSource.camera);
+    if (pickedImage != null) {
+      setState(() {
+        _images.add(File(pickedImage.path));
+      });
+    } else {
+      print("No image captured.");
+    }
+  }
 
   Future<String?> getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -47,6 +79,20 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void submitReport() async {
+    if (otherPlatformController.text.isNotEmpty) {
+      selectedPlatforms.add(otherPlatformController.text);
+    }
+    if (otherCyberbullyingController.text.isNotEmpty) {
+      selectedCyberbullyingTypes.add(otherCyberbullyingController.text);
+    }
+
+    List<String> base64Images = [];
+    for (File image in _images) {
+      List<int> imageBytes = await image.readAsBytes();
+      String base64Image = base64Encode(imageBytes);
+      base64Images.add(base64Image);
+    }
+
     var regBody = {
       "victimRelationship": _relationship,
       "victimName": _victimNameController.text,
@@ -57,9 +103,11 @@ class _ReportScreenState extends State<ReportScreen> {
       "platformUsed": selectedPlatforms,
       "cyberbullyingType": selectedCyberbullyingTypes,
       "incidentDetails": incidentDetailsController.text,
+      "incidentEvidence": base64Images,
       "perpetratorName": _perpetratorName.text,
       "perpetratorRole": _perpetratorRole,
       "perpetratorGradeYearLevel": _perpetratorGradeYearLevel.text,
+      "supportTypes": selectedSupportTypes,
       "actionsTaken": _actionsTaken,
       "describeActions": _describeActionsTaken.text,
     };
@@ -339,44 +387,6 @@ class _ReportScreenState extends State<ReportScreen> {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Anonymous Option
-          const Text('Do you want to remain anonymous?',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17.0,
-              )),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 2.0),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16),
-            ),
-            hint: const Text('Select an option'),
-            value: _isAnonymous,
-            items: ['Yes', 'No'].map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _isAnonymous = newValue;
-              });
-            },
-            validator: (value) =>
-                value == null ? 'Please select an option' : null,
-          ),
-          const SizedBox(height: 20),
-
           // Victim Information
           const Text('Relationship to Victim',
               style: TextStyle(
@@ -869,37 +879,71 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          GestureDetector(
-            onTap: () {},
-            child: Container(
-              height: 65,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Stack(
-                children: [
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                    ),
+          Container(
+            height: 300, // Increased height for better visibility
+            width: double.infinity,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 20,
+                  left: 0,
+                  right: 0,
+                  bottom: 40,
+                  child: _images.isEmpty
+                      ? const Center(
+                          child: Text("No Images are selected"),
+                        )
+                      : _images.length == 1
+                          ? Center(
+                              child: Image.file(
+                                _images[0],
+                                fit: BoxFit.contain,
+                              ),
+                            )
+                          : GridView.builder(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 1,
+                                crossAxisSpacing: 4,
+                                mainAxisSpacing: 4,
+                              ),
+                              itemCount: _images.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: Image.file(
+                                    _images[index],
+                                    fit: BoxFit.cover,
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+                Positioned(
+                  bottom: 8,
+                  left: 8,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: getImage,
+                        child: const Icon(Icons.add_circle_outline, size: 27),
+                      ),
+                      const SizedBox(width: 16),
+                      GestureDetector(
+                        onTap: captureImage,
+                        child: const Icon(Icons.camera_alt_outlined, size: 27),
+                      ),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.mic_outlined, size: 27),
+                    ],
                   ),
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    child: Row(
-                      children: [
-                        Icon(Icons.add_circle_outline, size: 27),
-                        SizedBox(width: 16),
-                        Icon(Icons.camera_alt_outlined, size: 27),
-                        SizedBox(width: 16),
-                        Icon(Icons.mic_outlined, size: 27),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -911,12 +955,15 @@ class _ReportScreenState extends State<ReportScreen> {
   //step 4
   String? _perpetratorRole;
   String? _actionsTaken;
-  bool _emotionalSupport = false;
-  bool _legalSupport = false;
-  bool _academicSupport = false;
-  bool _otherSupport = false;
   bool _agreementChecked = false;
   Step _buildVictimInformationStep() {
+    final supportTypes = [
+      'Counseling for the victim',
+      'Talk between the victim and perpetrator',
+      'Disciplinary action against the perpetrator',
+      'Others (Please Specify)'
+    ];
+
     return Step(
       title: const Text(''),
       content: Column(
@@ -1059,76 +1106,35 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: 8),
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            children: supportTypes.map((type) {
+              return CheckboxListTile(
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                visualDensity:
+                    const VisualDensity(horizontal: -4, vertical: -4),
+                title: Text(type),
+                value: selectedSupportTypes.contains(type),
+                onChanged: (bool? selected) {
+                  setState(() {
+                    if (selected ?? false) {
+                      selectedSupportTypes.add(type);
+                    } else {
+                      selectedSupportTypes.remove(type);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          if (selectedSupportTypes.contains('Others (Please Specify)'))
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Checkbox(
-                    value: _emotionalSupport,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _emotionalSupport = value ?? false;
-                      });
-                    },
-                  ),
-                  const Text(
-                    'Counseling for the victim',
-                    style: TextStyle(fontSize: 17.0),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _legalSupport,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _legalSupport = value ?? false;
-                      });
-                    },
-                  ),
-                  const Text(
-                    'Talk between the victim and perpetrator',
-                    style: TextStyle(fontSize: 17.0),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _academicSupport,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _academicSupport = value ?? false;
-                      });
-                    },
-                  ),
-                  const Text(
-                    'Disciplinary action against the perpetrator',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _otherSupport,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        _otherSupport = value ?? false;
-                      });
-                    },
-                  ),
-                  const Text(
-                    'Other',
-                    style: TextStyle(fontSize: 17.0),
-                  ),
-                ],
-              ),
-              if (_otherSupport)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: TextFormField(
+                  const SizedBox(height: 8.0),
+                  TextFormField(
+                    controller: otherSupportController,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1137,17 +1143,22 @@ class _ReportScreenState extends State<ReportScreen> {
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                        borderSide: BorderSide(color: Colors.blue, width: 2.0),
                       ),
                       hintText: 'Specify other support',
                     ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify other support'
-                        : null,
+                    validator: (value) {
+                      if (selectedCyberbullyingTypes
+                              .contains('Others (Please Specify)') &&
+                          (value == null || value.isEmpty)) {
+                        return 'Please specify the other type of support';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+            ),
           const SizedBox(height: 20),
 
           const Text('Have any actions been taken so far?',

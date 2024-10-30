@@ -61,7 +61,7 @@ class UserTextfield extends StatelessWidget {
               hintStyle: TextStyle(
                 color: Colors.grey.withOpacity(0.5),
               ),
-              contentPadding: const EdgeInsets.fromLTRB(30.0, 22.0, 30.0, 22.0),
+              contentPadding: const EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0),
               suffixIcon: suffixIcon,
             ),
           ),
