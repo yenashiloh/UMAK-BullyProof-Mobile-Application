@@ -1,12 +1,14 @@
+import 'package:bully_proof_umak/screens/history/history_screen.dart';
 import 'package:bully_proof_umak/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/report-incidents/report_screen.dart';
-import 'screens/seek-help/seek_help_screen.dart';
 import 'screens/notifications/notification_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +20,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final String? token;
 
-  const MyApp({@required this.token, super.key});
+  const MyApp({required this.token, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,21 +44,50 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   late String email;
-
+  late String userId;
+  late String token;
   int _currentIndex = 0;
+  List<Map<String, dynamic>> _userReports = [];
 
   @override
   void initState() {
     super.initState();
-    
+
     Map<String, dynamic> jwtDecodedToken = JwtDecoder.decode(widget.token);
     email = jwtDecodedToken['email'] ?? "Unknown";
+    userId = jwtDecodedToken['_id'] ?? "";
+    token = widget.token;
+
+    _fetchUserReportData(userId);
   }
 
-  void _onPageSelected(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+  Future<void> _fetchUserReportData(String userId) async {
+    const reportUrl = 'http://52.195.171.20/reports';
+    try {
+      final reportResponse = await http.get(Uri.parse(reportUrl), headers: {
+        'Authorization': 'Bearer ${widget.token}',
+      });
+
+      if (reportResponse.statusCode == 200) {
+        final List<dynamic> reports = json.decode(reportResponse.body);
+
+        // Filter reports for the current user
+        final userReports =
+            reports.where((report) => report['reportedBy'] == userId).toList();
+
+        setState(() {
+          _userReports = List<Map<String, dynamic>>.from(userReports);
+        });
+
+        if (_userReports.isEmpty) {
+          print("No reports found for user $userId");
+        }
+      } else {
+        throw Exception('Failed to fetch reports');
+      }
+    } catch (e) {
+      print('Error fetching report data: $e');
+    }
   }
 
   @override
@@ -97,7 +128,11 @@ class HomePageState extends State<HomePage> {
             email: email,
           ),
           const ReportScreen(),
-          const SeekHelpScreen(),
+          HistoryScreen(
+            reports: _userReports,
+            token: widget.token,
+            userId: userId,
+          ),
           const NotificationScreen(),
           const ProfileScreen(),
         ],
@@ -124,9 +159,9 @@ class HomePageState extends State<HomePage> {
           ),
           _buildBottomNavigationBarItem(
             index: 2,
-            icon: const Icon(Icons.calendar_today),
-            activeIcon: const Icon(Icons.calendar_today),
-            label: 'Get Help',
+            icon: const Icon(Icons.archive_outlined),
+            activeIcon: const Icon(Icons.archive),
+            label: 'History',
           ),
           _buildBottomNavigationBarItem(
             index: 3,
@@ -175,5 +210,11 @@ class HomePageState extends State<HomePage> {
       ),
       label: label,
     );
+  }
+
+  void _onPageSelected(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
   }
 }

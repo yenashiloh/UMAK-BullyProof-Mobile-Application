@@ -23,10 +23,10 @@ class _ReportScreenState extends State<ReportScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _victimNameController = TextEditingController();
-  final _victimGradeYearLevelController = TextEditingController();
+  String? _victimGradeYearLevelController;
   final _reportedTo = TextEditingController();
   final _perpetratorName = TextEditingController();
-  final _perpetratorGradeYearLevel = TextEditingController();
+  String? _perpetratorGradeYearLevel;
   final _describeActionsTaken = TextEditingController();
   String? _relationship;
   String? _victimRole;
@@ -97,7 +97,7 @@ class _ReportScreenState extends State<ReportScreen> {
       "victimRelationship": _relationship,
       "victimName": _victimNameController.text,
       "victimType": _victimRole,
-      "gradeYearLevel": _victimGradeYearLevelController.text,
+      "gradeYearLevel": _victimGradeYearLevelController,
       "hasReportedBefore": _hasReportedBefore,
       "reportedTo": _reportedTo.text,
       "platformUsed": selectedPlatforms,
@@ -106,7 +106,7 @@ class _ReportScreenState extends State<ReportScreen> {
       "incidentEvidence": base64Images,
       "perpetratorName": _perpetratorName.text,
       "perpetratorRole": _perpetratorRole,
-      "perpetratorGradeYearLevel": _perpetratorGradeYearLevel.text,
+      "perpetratorGradeYearLevel": _perpetratorGradeYearLevel,
       "supportTypes": selectedSupportTypes,
       "actionsTaken": _actionsTaken,
       "describeActions": _describeActionsTaken.text,
@@ -388,7 +388,7 @@ class _ReportScreenState extends State<ReportScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Victim Information
-          const Text('Relationship to Victim',
+          const Text('Relationship to the Complainant',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17.0,
@@ -406,7 +406,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
             ),
-            hint: const Text('Select relationship to victim'),
+            hint: const Text('Select Relationship to the Complainant'),
             value: _relationship,
             items: ['Self', 'Parent/Guardian', 'Professor', 'Friend', 'Other']
                 .map((String value) {
@@ -421,7 +421,7 @@ class _ReportScreenState extends State<ReportScreen> {
               });
             },
             validator: (value) => value == null
-                ? 'Please select your relationship to the victim'
+                ? 'Please select your relationship to the Complainant'
                 : null,
           ),
           if (_relationship == 'Other')
@@ -430,7 +430,8 @@ class _ReportScreenState extends State<ReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Please specify your relationship to the victim',
+                  const Text(
+                      'Please specify your relationship to the Complainant',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17.0,
@@ -457,7 +458,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           const SizedBox(height: 20),
 
-          const Text("Victim's Full Name",
+          const Text("Complainant's Name",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17.0,
@@ -475,18 +476,18 @@ class _ReportScreenState extends State<ReportScreen> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
-              hintText: "Enter victim's full name", // Added hint text
+              hintText: "Surname, First Name M.I", // Added hint text
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter the victim\'s name';
+                return 'Please enter the Complainant\'s name';
               }
               return null;
             },
           ),
           const SizedBox(height: 20),
 
-          const Text("Victim's Role in the School",
+          const Text("Complainant's Role in the University",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17.0,
@@ -504,7 +505,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
             ),
-            hint: const Text('Select role in the school'),
+            hint: const Text('Select role in the university'),
             value: _victimRole,
             items: ['Student', 'School Staff', 'Professor', 'Other']
                 .map((String value) {
@@ -519,7 +520,7 @@ class _ReportScreenState extends State<ReportScreen> {
               });
             },
             validator: (value) =>
-                value == null ? 'Please select the victim\'s role' : null,
+                value == null ? 'Please select the Complainant\'s role' : null,
           ),
           if (_victimRole == 'Other')
             Padding(
@@ -527,7 +528,7 @@ class _ReportScreenState extends State<ReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Please specify the victim\'s role',
+                  const Text('Please specify the Complainant\'s role',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17.0,
@@ -544,10 +545,10 @@ class _ReportScreenState extends State<ReportScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
-                      hintText: 'Enter the victim\'s role',
+                      hintText: 'Enter the Complainant\'s role',
                     ),
                     validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the victim\'s role'
+                        ? 'Please specify the Complainant\'s role'
                         : null,
                   ),
                 ],
@@ -556,15 +557,14 @@ class _ReportScreenState extends State<ReportScreen> {
           const SizedBox(height: 20),
 
           const Text(
-            "Victim's Grade/Year Level or Position",
+            "Complainant's Program/Year Level or Position",
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 17.0,
             ),
           ),
           const SizedBox(height: 8),
-          TextFormField(
-            controller: _victimGradeYearLevelController,
+          DropdownButtonFormField<String>(
             decoration: const InputDecoration(
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -575,14 +575,209 @@ class _ReportScreenState extends State<ReportScreen> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
-              hintText: "Enter victim's grade/year level or position",
             ),
-            validator: (value) => value?.isEmpty ?? true
-                ? 'Please enter the victim\'s grade/year level or position'
+            hint: const Text('Select Program/Year Level or Position'),
+            value: _victimGradeYearLevelController,
+            items: [
+              'Grade 11',
+              'Grade 12',
+              '1st Year College',
+              '2nd Year College',
+              '3rd Year College',
+              '4th Year College',
+              'Professor',
+              'staff',
+              'Other'
+            ].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _victimGradeYearLevelController = newValue;
+              });
+            },
+            validator: (value) => value == null
+                ? 'Please select Program/Year Level or Position'
                 : null,
           ),
+          if (_victimGradeYearLevelController == 'Other')
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Please specify Program/Year Level or Position',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      hintText: 'Enter the Complainant\'s role',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please specify the Complainant\'s role'
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          // TextFormField(
+          //   controller: _victimGradeYearLevelController,
+          //   decoration: const InputDecoration(
+          //     border: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     enabledBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     focusedBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
+          //     ),
+          //     hintText: "Select Program/Year Level or Position",
+          //   ),
+          //   validator: (value) => value?.isEmpty ?? true
+          //       ? 'Please enter the victim\'s grade/year level or position'
+          //       : null,
+          // ),
           const SizedBox(height: 20),
+          // const Text("Respondent's Name",
+          //     style: TextStyle(
+          //       fontWeight: FontWeight.bold,
+          //       fontSize: 17.0,
+          //     )),
+          // const SizedBox(height: 8),
+          // TextFormField(
+          //   controller: _perpetratorName,
+          //   decoration: const InputDecoration(
+          //     border: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     enabledBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     focusedBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
+          //     ),
+          //     hintText: "Surname, First Name M.I",
+          //   ),
+          //   validator: (value) {
+          //     if (value == null || value.isEmpty) {
+          //       return 'Please enter the Respondent\'s name';
+          //     }
+          //     return null;
+          //   },
+          // ),
+          // const SizedBox(height: 20),
 
+          // // Perpetrator's Role in the University
+          // const Text("Respondent's Role in the University",
+          //     style: TextStyle(
+          //       fontWeight: FontWeight.bold,
+          //       fontSize: 17.0,
+          //     )),
+          // const SizedBox(height: 8),
+          // DropdownButtonFormField<String>(
+          //   decoration: const InputDecoration(
+          //     border: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     enabledBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     focusedBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
+          //     ),
+          //   ),
+          //   hint: const Text('Select role in the university'),
+          //   value: _perpetratorRole,
+          //   items: ['Student', 'Professor', 'School Staff', 'Other']
+          //       .map((String value) {
+          //     return DropdownMenuItem<String>(
+          //       value: value,
+          //       child: Text(value),
+          //     );
+          //   }).toList(),
+          //   onChanged: (String? newValue) {
+          //     setState(() {
+          //       _perpetratorRole = newValue;
+          //     });
+          //   },
+          //   validator: (value) =>
+          //       value == null ? 'Please select the Respondent\'s role' : null,
+          // ),
+          // if (_perpetratorRole == 'Other')
+          //   Padding(
+          //     padding: const EdgeInsets.only(top: 16),
+          //     child: Column(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         const Text('Please specify the Respondent\'s role',
+          //             style: TextStyle(
+          //               fontWeight: FontWeight.bold,
+          //               fontSize: 17.0,
+          //             )),
+          //         const SizedBox(height: 8),
+          //         TextFormField(
+          //           decoration: const InputDecoration(
+          //             border: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //             ),
+          //             enabledBorder: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //             ),
+          //             focusedBorder: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 2.0),
+          //             ),
+          //             hintText: 'Enter the Respondent\'s role',
+          //           ),
+          //           validator: (value) => value?.isEmpty ?? true
+          //               ? 'Please specify the Respondent\'s role'
+          //               : null,
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // const SizedBox(height: 20),
+          // const Text(
+          //   "Respondent’s Program/Year Level or Position",
+          //   style: TextStyle(
+          //     fontWeight: FontWeight.bold,
+          //     fontSize: 17.0,
+          //   ),
+          // ),
+          // const SizedBox(height: 8),
+          // TextFormField(
+          //   controller: _perpetratorGradeYearLevel,
+          //   decoration: const InputDecoration(
+          //     border: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     enabledBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     focusedBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
+          //     ),
+          //     hintText: "Enter Respondent's grade/year level or position",
+          //   ),
+          //   validator: (value) => value?.isEmpty ?? true
+          //       ? 'Please enter the Respondent\'s grade/year level or position'
+          //       : null,
+          // ),
           const Text(
             'Have you reported this incident to anyone else?',
             style: TextStyle(
@@ -970,7 +1165,7 @@ class _ReportScreenState extends State<ReportScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Perpetrator's Full Name
-          const Text("Perpetrator's Full Name",
+          const Text("Respondent's Name",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17.0,
@@ -988,11 +1183,11 @@ class _ReportScreenState extends State<ReportScreen> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
-              hintText: "Enter perpetrator's full name",
+              hintText: "Surname, First Name M.I",
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter the perpetrator\'s name';
+                return 'Please enter the Respondent\'s name';
               }
               return null;
             },
@@ -1000,7 +1195,7 @@ class _ReportScreenState extends State<ReportScreen> {
           const SizedBox(height: 20),
 
           // Perpetrator's Role in the University
-          const Text("Perpetrator's Role in the University",
+          const Text("Respondent's Role in the University",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 17.0,
@@ -1018,7 +1213,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
             ),
-            hint: const Text('Select perpetrator\'s role'),
+            hint: const Text('Select role in the university'),
             value: _perpetratorRole,
             items: ['Student', 'Professor', 'School Staff', 'Other']
                 .map((String value) {
@@ -1033,7 +1228,7 @@ class _ReportScreenState extends State<ReportScreen> {
               });
             },
             validator: (value) =>
-                value == null ? 'Please select the perpetrator\'s role' : null,
+                value == null ? 'Please select the Respondent\'s role' : null,
           ),
           if (_perpetratorRole == 'Other')
             Padding(
@@ -1041,7 +1236,7 @@ class _ReportScreenState extends State<ReportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Please specify the perpetrator\'s role',
+                  const Text('Please specify the Respondent\'s role',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17.0,
@@ -1058,10 +1253,10 @@ class _ReportScreenState extends State<ReportScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
-                      hintText: 'Enter the perpetrator\'s role',
+                      hintText: 'Enter the Respondent\'s role',
                     ),
                     validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the perpetrator\'s role'
+                        ? 'Please specify the Respondent\'s role'
                         : null,
                   ),
                 ],
@@ -1069,15 +1264,14 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
           const SizedBox(height: 20),
           const Text(
-            "Perpetrator’s Grade/Year Level or Position",
+            "Respondent’s Program/Year Level or Position",
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 17.0,
             ),
           ),
           const SizedBox(height: 8),
-          TextFormField(
-            controller: _perpetratorGradeYearLevel,
+          DropdownButtonFormField<String>(
             decoration: const InputDecoration(
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1088,12 +1282,84 @@ class _ReportScreenState extends State<ReportScreen> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
-              hintText: "Enter perpetrator's grade/year level or position",
             ),
-            validator: (value) => value?.isEmpty ?? true
-                ? 'Please enter the perpetrator\'s grade/year level or position'
+            hint: const Text('Select Program/Year Level or Position'),
+            value: _perpetratorGradeYearLevel,
+            items: [
+              'Grade 11',
+              'Grade 12',
+              '1st Year College',
+              '2nd Year College',
+              '3rd Year College',
+              '4th Year College',
+              'Professor',
+              'staff',
+              'Other'
+            ].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _perpetratorGradeYearLevel = newValue;
+              });
+            },
+            validator: (value) => value == null
+                ? 'Please select Program/Year Level or Position'
                 : null,
           ),
+          if (_perpetratorGradeYearLevel == 'Other')
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Please specify Program/Year Level or Position',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      hintText: 'Enter the Complainant\'s role',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please specify the Complainant\'s role'
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          // TextFormField(
+          //   controller: _perpetratorGradeYearLevel,
+          //   decoration: const InputDecoration(
+          //     border: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     enabledBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //     ),
+          //     focusedBorder: OutlineInputBorder(
+          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
+          //     ),
+          //     hintText: "Enter Respondent's grade/year level ror position",
+          //   ),
+          //   validator: (value) => value?.isEmpty ?? true
+          //       ? 'Please enter the Respondent\'s grade/year level or position'
+          //       : null,
+          // ),
           const SizedBox(height: 20),
 
           // Have any actions been taken so far?
