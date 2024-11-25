@@ -1,3 +1,4 @@
+import 'package:bully_proof_umak/config.dart';
 import 'package:bully_proof_umak/screens/history/history_screen.dart';
 import 'package:bully_proof_umak/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +49,8 @@ class HomePageState extends State<HomePage> {
   late String token;
   int _currentIndex = 0;
   List<Map<String, dynamic>> _userReports = [];
+  List<Map<String, dynamic>> _userNotif = [];
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -57,12 +60,14 @@ class HomePageState extends State<HomePage> {
     email = jwtDecodedToken['email'] ?? "Unknown";
     userId = jwtDecodedToken['_id'] ?? "";
     token = widget.token;
-
-    _fetchUserReportData(userId);
   }
 
   Future<void> _fetchUserReportData(String userId) async {
-    const reportUrl = 'http://52.195.171.20/reports';
+    setState(() {
+      _isLoading = true;
+    });
+
+    const reportUrl = '${url}reports';
     try {
       final reportResponse = await http.get(Uri.parse(reportUrl), headers: {
         'Authorization': 'Bearer ${widget.token}',
@@ -71,22 +76,67 @@ class HomePageState extends State<HomePage> {
       if (reportResponse.statusCode == 200) {
         final List<dynamic> reports = json.decode(reportResponse.body);
 
-        // Filter reports for the current user
         final userReports =
             reports.where((report) => report['reportedBy'] == userId).toList();
 
         setState(() {
           _userReports = List<Map<String, dynamic>>.from(userReports);
+          _isLoading = false;
         });
 
         if (_userReports.isEmpty) {
           print("No reports found for user $userId");
         }
       } else {
+        setState(() {
+          _isLoading = false;
+        });
         throw Exception('Failed to fetch reports');
       }
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       print('Error fetching report data: $e');
+    }
+  }
+
+  Future<void> _fetchUserNotificationData(String userId) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    const notifUrl = '${url}notifications';
+    try {
+      final notifResponse = await http.get(Uri.parse(notifUrl), headers: {
+        'Authorization': 'Bearer ${widget.token}',
+      });
+
+      if (notifResponse.statusCode == 200) {
+        final List<dynamic> notifs = json.decode(notifResponse.body);
+
+        final userNotif =
+            notifs.where((notif) => notif['userId'] == userId).toList();
+
+        setState(() {
+          _userNotif = List<Map<String, dynamic>>.from(userNotif);
+          _isLoading = false;
+        });
+
+        if (_userNotif.isEmpty) {
+          print("No notifications found for user $userId");
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+        throw Exception('Failed to fetch notifications');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error fetching notification data: $e');
     }
   }
 
@@ -127,13 +177,27 @@ class HomePageState extends State<HomePage> {
             },
             email: email,
           ),
-          const ReportScreen(),
+          // In HomePage's build method, update the ReportScreen creation:
+          ReportScreen(
+            onNavigateToHistory: () {
+              setState(() {
+                _currentIndex = 2; // Index for History screen
+              });
+              _fetchUserReportData(userId); // Fetch the latest data
+            },
+          ),
           HistoryScreen(
             reports: _userReports,
             token: widget.token,
             userId: userId,
+            isLoading: _isLoading,
           ),
-          const NotificationScreen(),
+          NotificationScreen(
+            notifications: _userNotif,
+            token: widget.token,
+            userId: userId,
+            isLoading: _isLoading,
+          ),
           const ProfileScreen(),
         ],
       ),
@@ -216,5 +280,17 @@ class HomePageState extends State<HomePage> {
     setState(() {
       _currentIndex = index;
     });
+
+    switch (index) {
+      case 2:
+        _fetchUserReportData(userId);
+        break;
+      case 3:
+        _fetchUserNotificationData(userId);
+        break;
+      default:
+        // Optionally handle other cases or do nothing
+        break;
+    }
   }
 }

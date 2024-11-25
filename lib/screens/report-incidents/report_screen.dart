@@ -10,7 +10,8 @@ import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ReportScreen extends StatefulWidget {
-  const ReportScreen({super.key});
+  final VoidCallback? onNavigateToHistory;
+  const ReportScreen({super.key, this.onNavigateToHistory});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -23,15 +24,26 @@ class _ReportScreenState extends State<ReportScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _victimNameController = TextEditingController();
-  String? _victimGradeYearLevelController;
+  final _departmentCollege = TextEditingController();
   final _reportedTo = TextEditingController();
   final _perpetratorName = TextEditingController();
-  String? _perpetratorGradeYearLevel;
   final _describeActionsTaken = TextEditingController();
+  final _witnessInfo = TextEditingController();
+
   String? _relationship;
   String? _victimRole;
+  String? _victimGradeYearLevel;
+  String? _perpetratorRole;
+  String? _perpetratorGradeYearLevel;
+  String? _hasWitnesses;
   String? _hasReportedBefore;
+  String? _actionsTaken;
 
+  final otherRelationship = TextEditingController();
+  final otherVictimRole = TextEditingController();
+  final otherVictimGradeYearLevelController = TextEditingController();
+  final otherPerpetratorRole = TextEditingController();
+  final otherPerpetratorGradeYearLevelController = TextEditingController();
   final otherPlatformController = TextEditingController();
   final otherCyberbullyingController = TextEditingController();
   final witnessNamesController = TextEditingController();
@@ -39,6 +51,7 @@ class _ReportScreenState extends State<ReportScreen> {
   final otherSupportController = TextEditingController();
 
   bool _agreedToPrivacyPolicy = false;
+  bool _showSuccessDialog = false;
 
   List<String> selectedPlatforms = [];
   List<String> selectedCyberbullyingTypes = [];
@@ -95,19 +108,29 @@ class _ReportScreenState extends State<ReportScreen> {
 
     var regBody = {
       "victimRelationship": _relationship,
+      "otherVictimRelationship": otherRelationship.text,
       "victimName": _victimNameController.text,
       "victimType": _victimRole,
-      "gradeYearLevel": _victimGradeYearLevelController,
+      "otherVictimType": otherVictimRole.text,
+      "gradeYearLevel": _victimGradeYearLevel,
+      "otherGradeYearLevel": otherVictimGradeYearLevelController.text,
       "hasReportedBefore": _hasReportedBefore,
+      "departmentCollege": _departmentCollege.text,
       "reportedTo": _reportedTo.text,
       "platformUsed": selectedPlatforms,
-      "cyberbullyingType": selectedCyberbullyingTypes,
+      "otherPlatformUsed": otherPlatformController.text,
+      "hasWitness": _hasWitnesses,
+      "witnessInfo": _witnessInfo.text,
       "incidentDetails": incidentDetailsController.text,
       "incidentEvidence": base64Images,
       "perpetratorName": _perpetratorName.text,
       "perpetratorRole": _perpetratorRole,
+      "otherPerpetratorRole": otherPerpetratorRole.text,
       "perpetratorGradeYearLevel": _perpetratorGradeYearLevel,
+      "otherPerpetratorGradeYearLevel":
+          otherPerpetratorGradeYearLevelController.text,
       "supportTypes": selectedSupportTypes,
+      "otherSupportTypes": otherSupportController.text,
       "actionsTaken": _actionsTaken,
       "describeActions": _describeActionsTaken.text,
     };
@@ -139,9 +162,11 @@ class _ReportScreenState extends State<ReportScreen> {
     var jsonResponse = jsonDecode(response.body);
 
     if (jsonResponse['status']) {
-      // ignore: use_build_context_synchronously
-      _successMessage(context);
+      setState(() {
+        _showSuccessDialog = true;
+      });
     } else {
+      // Keep your existing error handling
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -184,140 +209,492 @@ class _ReportScreenState extends State<ReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Form(
-        key: _formKey,
-        child: Theme(
-          data: Theme.of(context).copyWith(
-            primaryColor: const Color(0xFF1A4594),
-            colorScheme: ColorScheme.fromSwatch().copyWith(
-              primary: const Color(0xFF1A4594),
-              secondary: const Color(0xFF1A4594),
-            ),
-            shadowColor: Colors.transparent,
-          ),
-          child: Stepper(
-            type: StepperType.horizontal,
-            elevation: 0,
-            currentStep: _currentStep,
-            onStepContinue: () {
-              if (_validateCurrentStep()) {
-                if (_currentStep < _steps.length - 1) {
-                  setState(() => _currentStep++);
-                } else {
-                  _submitForm();
-                }
-              }
-            },
-            onStepCancel: () {
-              if (_currentStep > 0) {
-                setState(() => _currentStep--);
-              }
-            },
-            steps: _steps,
-            controlsBuilder: (context, details) {
-              return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (_currentStep > 0)
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: details.onStepCancel,
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF1A4594)),
-                          ),
-                          child: const Text('Previous',
-                              style: TextStyle(color: Color(0xFF1A4594))),
-                        ),
-                      ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: details.onStepContinue,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1A4594),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Text(_currentStep == _steps.length - 1
-                            ? 'Submit'
-                            : 'Next'),
-                      ),
-                    ),
-                  ],
+      body: Stack(
+        children: [
+          Form(
+            key: _formKey,
+            child: Theme(
+              data: Theme.of(context).copyWith(
+                primaryColor: const Color(0xFF1A4594),
+                colorScheme: ColorScheme.fromSwatch().copyWith(
+                  primary: const Color(0xFF1A4594),
+                  secondary: const Color(0xFF1A4594),
                 ),
-              );
-            },
+                shadowColor: Colors.transparent,
+              ),
+              child: Stepper(
+                type: StepperType.horizontal,
+                elevation: 0,
+                currentStep: _currentStep,
+                onStepContinue: () {
+                  if (_validateCurrentStep()) {
+                    if (_currentStep < _steps.length - 1) {
+                      setState(() => _currentStep++);
+                    } else {
+                      _submitForm();
+                    }
+                  }
+                },
+                onStepCancel: () {
+                  if (_currentStep > 0) {
+                    setState(() => _currentStep--);
+                  }
+                },
+                steps: _steps,
+                controlsBuilder: (context, details) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_currentStep > 0)
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: details.onStepCancel,
+                              style: OutlinedButton.styleFrom(
+                                side:
+                                    const BorderSide(color: Color(0xFF1A4594)),
+                              ),
+                              child: const Text('Previous',
+                                  style: TextStyle(color: Color(0xFF1A4594))),
+                            ),
+                          ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: details.onStepContinue,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1A4594),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text(_currentStep == _steps.length - 1
+                                ? 'Submit'
+                                : 'Next'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
-        ),
+          if (_showSuccessDialog)
+            Container(
+              color: Colors.black54,
+              child: Center(
+                child: TweenAnimationBuilder(
+                  duration: const Duration(milliseconds: 300),
+                  tween: Tween<double>(begin: 0.0, end: 1.0),
+                  builder: (context, double value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Animated Check Container
+                        TweenAnimationBuilder(
+                          duration: const Duration(milliseconds: 800),
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          builder: (context, double value, child) {
+                            return Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.green.withOpacity(0.5),
+                                  width: 2,
+                                ),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Pulsing circle animation
+                                  TweenAnimationBuilder(
+                                    duration:
+                                        const Duration(milliseconds: 1500),
+                                    tween: Tween<double>(begin: 0.0, end: 1.0),
+                                    builder: (context, double value, child) {
+                                      return Container(
+                                        width: 80 * (1 + (value * 0.2)),
+                                        height: 80 * (1 + (value * 0.2)),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green
+                                              .withOpacity(0.2 * (1 - value)),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  // Check icon with scale and rotate animation
+                                  Transform.scale(
+                                    scale: value,
+                                    child: Transform.rotate(
+                                      angle: value * 2 * 3.14159,
+                                      child: const Icon(
+                                        Icons.check,
+                                        color: Colors.green,
+                                        size: 40,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        // Animated Text
+                        TweenAnimationBuilder(
+                          duration: const Duration(milliseconds: 500),
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          builder: (context, double value, child) {
+                            return Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(0, 20 * (1 - value)),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Report Submitted Successfully!',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A4594),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Animated Description
+                        TweenAnimationBuilder(
+                          duration: const Duration(milliseconds: 600),
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          builder: (context, double value, child) {
+                            return Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(0, 20 * (1 - value)),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Thank you for taking action. Your report has been received, and we\'re here to help. You\'ll be notified of any updates. Remember, you\'re not alone—support is available if you need it.',
+                            style: TextStyle(
+                              color: Color(0xFF666666),
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Animated Button
+                        TweenAnimationBuilder(
+                          duration: const Duration(milliseconds: 700),
+                          tween: Tween<double>(begin: 0.0, end: 1.0),
+                          builder: (context, double value, child) {
+                            return Opacity(
+                              opacity: value,
+                              child: Transform.translate(
+                                offset: Offset(0, 20 * (1 - value)),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                _clearFormInputs();
+                                _showSuccessDialog = false;
+                                widget.onNavigateToHistory?.call();
+                              });
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1A4594),
+                              minimumSize: const Size(double.infinity, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: const Text(
+                              'Continue',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
   bool _validateCurrentStep() {
     bool isValid = true;
+    String errorMessage = '';
 
     switch (_currentStep) {
       case 0:
         if (!_agreedToPrivacyPolicy) {
           _logger.warning('Privacy policy not agreed');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content:
-                  Text('Please agree to the privacy policy before continuing'),
-            ),
-          );
+          errorMessage = 'Please agree to the privacy policy before continuing';
           isValid = false;
         }
         break;
-      // case 1:
-      //   if (_selectedLanguage == null) {
-      //     _logger.warning('Language not selected');
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       const SnackBar(content: Text('Please select a preferred language')),
-      //     );
-      //     isValid = false;
-      //   }
-      //   break;
-      // case 2:
-      //   if (!_formKey.currentState!.validate()) {
-      //     _logger.warning('Victim information validation failed');
-      //     isValid = false;
-      //   }
-      //   break;
-      // case 3:
-      //   if (selectedPlatforms.isEmpty) {
-      //     _logger.warning('No platform selected');
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       const SnackBar(
-      //           content: Text('Please select at least one platform')),
-      //     );
-      //     isValid = false;
-      //   }
-      //   if (selectedCyberbullyingTypes.isEmpty) {
-      //     _logger.warning('No cyberbullying type selected');
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       const SnackBar(
-      //           content:
-      //               Text('Please select at least one type of cyberbullying')),
-      //     );
-      //     isValid = false;
-      //   }
-      //   if (!_formKey.currentState!.validate()) {
-      //     _logger.warning('Form validation failed');
-      //     isValid = false;
-      //   }
-      //   break;
-      // default:
-      //   isValid = true;
+      case 1:
+        // Validate relationship
+        if (_relationship == null) {
+          _logger.warning('Relationship not selected');
+          errorMessage = 'Please select your relationship to the Complainant';
+          isValid = false;
+          break;
+        } else if (_relationship == 'Other') {
+          if (otherRelationship.text.isEmpty) {
+            _logger.warning('Other Relationship not specified');
+            errorMessage =
+                'Please specify your relationship to the Complainant';
+            isValid = false;
+            break;
+          }
+        }
+
+        // Validate victim name
+        if (_victimNameController.text.isEmpty) {
+          _logger.warning('Complainant name empty');
+          errorMessage = "Please enter the Complainant's name";
+          isValid = false;
+          break;
+        }
+
+        // Validate victim role
+        if (_victimRole == null) {
+          _logger.warning('Complainant role not selected');
+          errorMessage =
+              "Please select the Complainant's role in the university";
+          isValid = false;
+          break;
+        } else if (_victimRole == 'Other') {
+          if (otherVictimRole.text.isEmpty) {
+            _logger.warning('Other Complainant role not specified');
+            errorMessage =
+                'Please specify the Complainant\'s role in the university';
+            isValid = false;
+            break;
+          }
+        }
+
+        // Validate victim grade/year level
+        if (_victimGradeYearLevel == null) {
+          _logger.warning('Complainant grade/year level not selected');
+          errorMessage =
+              "Please select the Complainant's Program/Year Level or Position";
+          isValid = false;
+          break;
+        } else if (_victimGradeYearLevel == 'Other') {
+          if (otherVictimGradeYearLevelController.text.isEmpty) {
+            _logger.warning('Other Complainant grade/year level not specified');
+            errorMessage =
+                'Please specify the Complainant\'s Program/Year Level or Position';
+            isValid = false;
+            break;
+          }
+        }
+
+        // Validate perpetrator name
+        if (_perpetratorName.text.isEmpty) {
+          _logger.warning('Complainee name empty');
+          errorMessage = "Please enter the Complainee's name";
+          isValid = false;
+          break;
+        }
+
+        // Validate perpetrator role
+        if (_perpetratorRole == null) {
+          _logger.warning('Complainee role not selected');
+          errorMessage =
+              "Please select the Complainee's role in the university";
+          isValid = false;
+          break;
+        } else if (_perpetratorRole == 'Other') {
+          if (otherPerpetratorRole.text.isEmpty) {
+            _logger.warning(
+                'Other Complainee\'s role in the university not specified');
+            errorMessage =
+                'Please specify the Complainee\'s role in the university';
+            isValid = false;
+            break;
+          }
+        }
+
+        // Validate perpetrator grade/year level
+        if (_perpetratorGradeYearLevel == null) {
+          _logger.warning('Complainee grade/year level not selected');
+          errorMessage =
+              "Please select the Complainee's Program/Year Level or Position";
+          isValid = false;
+          break;
+        } else if (_perpetratorGradeYearLevel == 'Other') {
+          if (otherPerpetratorGradeYearLevelController.text.isEmpty) {
+            _logger.warning(
+                'Other Complainee\'s Program/Year Level or Position not specified');
+            errorMessage =
+                'Please specify the Complainee\'s Program/Year Level or Position';
+            isValid = false;
+            break;
+          }
+        }
+        break;
+      case 2:
+        // Validate Platform
+        if (selectedPlatforms.isEmpty) {
+          _logger.warning('Platform not selected');
+          errorMessage = 'Please select Platform or Medium Used';
+          isValid = false;
+          break;
+        } else if (selectedPlatforms.contains('Others (Please Specify)')) {
+          if (otherPlatformController.text.isEmpty) {
+            _logger.warning('Other Platform or Medium Used not specified');
+            errorMessage = 'Please specify the Platform or Medium Used';
+            isValid = false;
+            break;
+          }
+        }
+
+        // Validate witnesses
+        if (_hasWitnesses == null) {
+          _logger.warning('Option not selected');
+          errorMessage = 'Please select witnesses Option';
+          isValid = false;
+          break;
+        } else if (_hasWitnesses == 'Yes') {
+          if (_witnessInfo.text.isEmpty) {
+            _logger.warning('Witness Name and Contact not specified');
+            errorMessage =
+                'Please specify the Name and Contact information of witness';
+            isValid = false;
+            break;
+          }
+        }
+
+        // Validate Incident Details
+        if (incidentDetailsController.text.isEmpty) {
+          _logger.warning('Incident Details not specified');
+          errorMessage = 'Please provide details of the incident';
+          isValid = false;
+          break;
+        }
+
+        // Validate Evidence
+        if (_images.isEmpty) {
+          _logger.warning('No Evidence provided');
+          errorMessage = 'Please provide any evidence';
+          isValid = false;
+          break;
+        }
+        break;
+      case 3:
+        // Validate reported
+        if (_hasReportedBefore == null) {
+          _logger.warning('Have you reported is not specified');
+          errorMessage = 'Please select option if you reported this incident';
+          isValid = false;
+          break;
+        } else if (_hasReportedBefore == 'Yes') {
+          if (_departmentCollege.text.isEmpty) {
+            _logger.warning('Department or College not specified');
+            errorMessage = 'Please specify the Department or College';
+            isValid = false;
+            break;
+          }
+          if (_reportedTo.text.isEmpty) {
+            _logger.warning('Name of the person not specified');
+            errorMessage =
+                'Please specify the Name of the person from the department or college';
+            isValid = false;
+            break;
+          }
+          if (_actionsTaken == null) {
+            _logger.warning('Option not selected');
+            errorMessage = 'Please select if any actions been taken';
+            isValid = false;
+            break;
+          } else if (_actionsTaken == 'Yes') {
+            if (_describeActionsTaken.text.isEmpty) {
+              _logger.warning('Actions not specified');
+              errorMessage = 'Please specify actions taken';
+              isValid = false;
+              break;
+            }
+          }
+        }
+
+        // Validate Support
+        if (selectedSupportTypes.isEmpty) {
+          _logger.warning('type of support not selected');
+          errorMessage = 'Please select type of support';
+          isValid = false;
+          break;
+        } else if (selectedSupportTypes.contains('Others (Please Specify)')) {
+          if (otherSupportController.text.isEmpty) {
+            _logger.warning('Other type of support not specified');
+            errorMessage = 'Please specify other type of support';
+            isValid = false;
+            break;
+          }
+        }
+
+        // Validate statements
+        if (!_agreementChecked) {
+          _logger.warning('above statements not agreed');
+          errorMessage = 'Please agree that the above statements are true';
+          isValid = false;
+        }
+        break;
     }
 
-    // if (!isValid) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('Please fill in all required fields')),
-    //   );
-    // }
+    if (!isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
 
     return isValid;
   }
@@ -438,6 +815,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
+                    controller: otherRelationship,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -535,6 +913,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
+                    controller: otherVictimRole,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -577,7 +956,7 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
             hint: const Text('Select Program/Year Level or Position'),
-            value: _victimGradeYearLevelController,
+            value: _victimGradeYearLevel,
             items: [
               'Grade 11',
               'Grade 12',
@@ -596,14 +975,14 @@ class _ReportScreenState extends State<ReportScreen> {
             }).toList(),
             onChanged: (String? newValue) {
               setState(() {
-                _victimGradeYearLevelController = newValue;
+                _victimGradeYearLevel = newValue;
               });
             },
             validator: (value) => value == null
                 ? 'Please select Program/Year Level or Position'
                 : null,
           ),
-          if (_victimGradeYearLevelController == 'Other')
+          if (_victimGradeYearLevel == 'Other')
             Padding(
               padding: const EdgeInsets.only(top: 16),
               child: Column(
@@ -616,6 +995,7 @@ class _ReportScreenState extends State<ReportScreen> {
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
+                    controller: otherVictimGradeYearLevelController,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -626,168 +1006,25 @@ class _ReportScreenState extends State<ReportScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
-                      hintText: 'Enter the Complainant\'s role',
+                      hintText:
+                          'Enter the Complainant\'s Program/Year Level or Position',
                     ),
                     validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the Complainant\'s role'
+                        ? 'Please specify the Complainant\'s Program/Year Level or Position'
                         : null,
                   ),
                 ],
               ),
             ),
-          // TextFormField(
-          //   controller: _victimGradeYearLevelController,
-          //   decoration: const InputDecoration(
-          //     border: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     enabledBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     focusedBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
-          //     ),
-          //     hintText: "Select Program/Year Level or Position",
-          //   ),
-          //   validator: (value) => value?.isEmpty ?? true
-          //       ? 'Please enter the victim\'s grade/year level or position'
-          //       : null,
-          // ),
           const SizedBox(height: 20),
-          // const Text("Respondent's Name",
-          //     style: TextStyle(
-          //       fontWeight: FontWeight.bold,
-          //       fontSize: 17.0,
-          //     )),
-          // const SizedBox(height: 8),
-          // TextFormField(
-          //   controller: _perpetratorName,
-          //   decoration: const InputDecoration(
-          //     border: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     enabledBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     focusedBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
-          //     ),
-          //     hintText: "Surname, First Name M.I",
-          //   ),
-          //   validator: (value) {
-          //     if (value == null || value.isEmpty) {
-          //       return 'Please enter the Respondent\'s name';
-          //     }
-          //     return null;
-          //   },
-          // ),
-          // const SizedBox(height: 20),
-
-          // // Perpetrator's Role in the University
-          // const Text("Respondent's Role in the University",
-          //     style: TextStyle(
-          //       fontWeight: FontWeight.bold,
-          //       fontSize: 17.0,
-          //     )),
-          // const SizedBox(height: 8),
-          // DropdownButtonFormField<String>(
-          //   decoration: const InputDecoration(
-          //     border: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     enabledBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     focusedBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
-          //     ),
-          //   ),
-          //   hint: const Text('Select role in the university'),
-          //   value: _perpetratorRole,
-          //   items: ['Student', 'Professor', 'School Staff', 'Other']
-          //       .map((String value) {
-          //     return DropdownMenuItem<String>(
-          //       value: value,
-          //       child: Text(value),
-          //     );
-          //   }).toList(),
-          //   onChanged: (String? newValue) {
-          //     setState(() {
-          //       _perpetratorRole = newValue;
-          //     });
-          //   },
-          //   validator: (value) =>
-          //       value == null ? 'Please select the Respondent\'s role' : null,
-          // ),
-          // if (_perpetratorRole == 'Other')
-          //   Padding(
-          //     padding: const EdgeInsets.only(top: 16),
-          //     child: Column(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       children: [
-          //         const Text('Please specify the Respondent\'s role',
-          //             style: TextStyle(
-          //               fontWeight: FontWeight.bold,
-          //               fontSize: 17.0,
-          //             )),
-          //         const SizedBox(height: 8),
-          //         TextFormField(
-          //           decoration: const InputDecoration(
-          //             border: OutlineInputBorder(
-          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //             ),
-          //             enabledBorder: OutlineInputBorder(
-          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //             ),
-          //             focusedBorder: OutlineInputBorder(
-          //               borderSide: BorderSide(color: Colors.grey, width: 2.0),
-          //             ),
-          //             hintText: 'Enter the Respondent\'s role',
-          //           ),
-          //           validator: (value) => value?.isEmpty ?? true
-          //               ? 'Please specify the Respondent\'s role'
-          //               : null,
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // const SizedBox(height: 20),
-          // const Text(
-          //   "Respondent’s Program/Year Level or Position",
-          //   style: TextStyle(
-          //     fontWeight: FontWeight.bold,
-          //     fontSize: 17.0,
-          //   ),
-          // ),
-          // const SizedBox(height: 8),
-          // TextFormField(
-          //   controller: _perpetratorGradeYearLevel,
-          //   decoration: const InputDecoration(
-          //     border: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     enabledBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     focusedBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
-          //     ),
-          //     hintText: "Enter Respondent's grade/year level or position",
-          //   ),
-          //   validator: (value) => value?.isEmpty ?? true
-          //       ? 'Please enter the Respondent\'s grade/year level or position'
-          //       : null,
-          // ),
-          const Text(
-            'Have you reported this incident to anyone else?',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 17.0,
-            ),
-          ),
+          const Text("Complainee's Name",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17.0,
+              )),
           const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _hasReportedBefore,
+          TextFormField(
+            controller: _perpetratorName,
             decoration: const InputDecoration(
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -798,10 +1035,40 @@ class _ReportScreenState extends State<ReportScreen> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16),
+              hintText: "Surname, First Name M.I",
             ),
-            hint: const Text('Select an option'),
-            items: ['Yes', 'No'].map((String value) {
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the Complainee\'s name';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // Perpetrator's Role in the University
+          const Text("Complainee's Role in the University",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17.0,
+              )),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 2.0),
+              ),
+            ),
+            hint: const Text('Select role in the university'),
+            value: _perpetratorRole,
+            items: ['Student', 'Professor', 'School Staff', 'Other']
+                .map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -809,26 +1076,26 @@ class _ReportScreenState extends State<ReportScreen> {
             }).toList(),
             onChanged: (String? newValue) {
               setState(() {
-                _hasReportedBefore = newValue;
+                _perpetratorRole = newValue;
               });
             },
             validator: (value) =>
-                value == null ? 'Please select an option' : null,
+                value == null ? 'Please select the Complainee\'s role' : null,
           ),
-          if (_hasReportedBefore == 'Yes')
+          if (_perpetratorRole == 'Other')
             Padding(
               padding: const EdgeInsets.only(top: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Please specify to whom you reported',
+                  const Text('Please specify the Complainee\'s role',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17.0,
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
-                    controller: _reportedTo,
+                    controller: otherPerpetratorRole,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -839,10 +1106,91 @@ class _ReportScreenState extends State<ReportScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
-                      hintText: 'Enter the person or entity',
+                      hintText: 'Enter the Complainee\'s role',
                     ),
                     validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify to whom you reported'
+                        ? 'Please specify the Complainee\'s role'
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 20),
+          const Text(
+            "Complainee’s Program/Year Level or Position",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 17.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 2.0),
+              ),
+            ),
+            hint: const Text('Select Program/Year Level or Position'),
+            value: _perpetratorGradeYearLevel,
+            items: [
+              'Grade 11',
+              'Grade 12',
+              '1st Year College',
+              '2nd Year College',
+              '3rd Year College',
+              '4th Year College',
+              'Professor',
+              'staff',
+              'Other'
+            ].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _perpetratorGradeYearLevel = newValue;
+              });
+            },
+            validator: (value) => value == null
+                ? 'Please select Program/Year Level or Position'
+                : null,
+          ),
+          if (_perpetratorGradeYearLevel == 'Other')
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Please specify Program/Year Level or Position',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: otherPerpetratorGradeYearLevelController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      hintText: 'Enter the Complainee\'s role',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please specify the Complainee\'s role'
                         : null,
                   ),
                 ],
@@ -952,51 +1300,128 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
           const SizedBox(height: 20),
+          // const Text(
+          //   'What type of cyberbullying was involved? (Check all that apply)',
+          //   style: TextStyle(
+          //     fontWeight: FontWeight.bold,
+          //     fontSize: 17.0,
+          //   ),
+          // ),
+          // const SizedBox(height: 16),
+          // Column(
+          //   children: cyberbullyingTypes.map((type) {
+          //     return CheckboxListTile(
+          //       contentPadding: EdgeInsets.zero,
+          //       controlAffinity: ListTileControlAffinity.leading,
+          //       visualDensity:
+          //           const VisualDensity(horizontal: -4, vertical: -4),
+          //       title: Text(type),
+          //       value: selectedCyberbullyingTypes.contains(type),
+          //       onChanged: (bool? selected) {
+          //         setState(() {
+          //           if (selected ?? false) {
+          //             selectedCyberbullyingTypes.add(type);
+          //           } else {
+          //             selectedCyberbullyingTypes.remove(type);
+          //           }
+          //         });
+          //       },
+          //     );
+          //   }).toList(),
+          // ),
+          // if (selectedCyberbullyingTypes.contains('Others (Please Specify)'))
+          //   Padding(
+          //     padding: const EdgeInsets.symmetric(vertical: 4.0),
+          //     child: Column(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         const Text(
+          //           'Please specify other type of cyberbullying',
+          //           style: TextStyle(
+          //             fontWeight: FontWeight.bold,
+          //             fontSize: 16.0,
+          //           ),
+          //         ),
+          //         const SizedBox(height: 8.0),
+          //         TextFormField(
+          //           controller: otherCyberbullyingController,
+          //           decoration: const InputDecoration(
+          //             border: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //             ),
+          //             enabledBorder: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //             ),
+          //             focusedBorder: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.blue, width: 2.0),
+          //             ),
+          //             hintText: 'Enter other type of cyberbullying',
+          //           ),
+          //           validator: (value) {
+          //             if (selectedCyberbullyingTypes
+          //                     .contains('Others (Please Specify)') &&
+          //                 (value == null || value.isEmpty)) {
+          //               return 'Please specify the other type of cyberbullying';
+          //             }
+          //             return null;
+          //           },
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // const SizedBox(height: 20),
           const Text(
-            'What type of cyberbullying was involved? (Check all that apply)',
+            'Were there any witnesses to the incident?',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 17.0,
             ),
           ),
-          const SizedBox(height: 16),
-          Column(
-            children: cyberbullyingTypes.map((type) {
-              return CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                visualDensity:
-                    const VisualDensity(horizontal: -4, vertical: -4),
-                title: Text(type),
-                value: selectedCyberbullyingTypes.contains(type),
-                onChanged: (bool? selected) {
-                  setState(() {
-                    if (selected ?? false) {
-                      selectedCyberbullyingTypes.add(type);
-                    } else {
-                      selectedCyberbullyingTypes.remove(type);
-                    }
-                  });
-                },
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _hasWitnesses,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 2.0),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16),
+            ),
+            hint: const Text('Select an option'),
+            items: ['Yes', 'No'].map((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
               );
             }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _hasWitnesses = newValue;
+              });
+            },
+            validator: (value) =>
+                value == null ? 'Please select an option' : null,
           ),
-          if (selectedCyberbullyingTypes.contains('Others (Please Specify)'))
+          if (_hasWitnesses == 'Yes')
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              padding: const EdgeInsets.only(top: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Please specify other type of cyberbullying',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16.0,
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
+                      'If yes, please provide their names and contact information:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
                   TextFormField(
-                    controller: otherCyberbullyingController,
+                    controller: _witnessInfo,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1005,18 +1430,13 @@ class _ReportScreenState extends State<ReportScreen> {
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue, width: 2.0),
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
-                      hintText: 'Enter other type of cyberbullying',
+                      hintText: 'Name / Contact',
                     ),
-                    validator: (value) {
-                      if (selectedCyberbullyingTypes
-                              .contains('Others (Please Specify)') &&
-                          (value == null || value.isEmpty)) {
-                        return 'Please specify the other type of cyberbullying';
-                      }
-                      return null;
-                    },
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please specify witness information'
+                        : null,
                   ),
                 ],
               ),
@@ -1056,7 +1476,8 @@ class _ReportScreenState extends State<ReportScreen> {
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
-              hintText: 'Enter detailed description of the incident here',
+              hintText:
+                  'Enter detailed description of the incident here (Maximum of 500 words)...',
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -1148,8 +1569,6 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   //step 4
-  String? _perpetratorRole;
-  String? _actionsTaken;
   bool _agreementChecked = false;
   Step _buildVictimInformationStep() {
     final supportTypes = [
@@ -1164,107 +1583,8 @@ class _ReportScreenState extends State<ReportScreen> {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Perpetrator's Full Name
-          const Text("Respondent's Name",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17.0,
-              )),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _perpetratorName,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 2.0),
-              ),
-              hintText: "Surname, First Name M.I",
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter the Respondent\'s name';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 20),
-
-          // Perpetrator's Role in the University
-          const Text("Respondent's Role in the University",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17.0,
-              )),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 2.0),
-              ),
-            ),
-            hint: const Text('Select role in the university'),
-            value: _perpetratorRole,
-            items: ['Student', 'Professor', 'School Staff', 'Other']
-                .map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _perpetratorRole = newValue;
-              });
-            },
-            validator: (value) =>
-                value == null ? 'Please select the Respondent\'s role' : null,
-          ),
-          if (_perpetratorRole == 'Other')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Please specify the Respondent\'s role',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17.0,
-                      )),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                      hintText: 'Enter the Respondent\'s role',
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the Respondent\'s role'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 20),
           const Text(
-            "Respondent’s Program/Year Level or Position",
+            'Have you reported this incident to other department or college?',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 17.0,
@@ -1272,6 +1592,7 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
+            value: _hasReportedBefore,
             decoration: const InputDecoration(
               border: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1282,20 +1603,10 @@ class _ReportScreenState extends State<ReportScreen> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16),
             ),
-            hint: const Text('Select Program/Year Level or Position'),
-            value: _perpetratorGradeYearLevel,
-            items: [
-              'Grade 11',
-              'Grade 12',
-              '1st Year College',
-              '2nd Year College',
-              '3rd Year College',
-              '4th Year College',
-              'Professor',
-              'staff',
-              'Other'
-            ].map((String value) {
+            hint: const Text('Select an option'),
+            items: ['Yes', 'No'].map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -1303,26 +1614,26 @@ class _ReportScreenState extends State<ReportScreen> {
             }).toList(),
             onChanged: (String? newValue) {
               setState(() {
-                _perpetratorGradeYearLevel = newValue;
+                _hasReportedBefore = newValue;
               });
             },
-            validator: (value) => value == null
-                ? 'Please select Program/Year Level or Position'
-                : null,
+            validator: (value) =>
+                value == null ? 'Please select an option' : null,
           ),
-          if (_perpetratorGradeYearLevel == 'Other')
+          if (_hasReportedBefore == 'Yes')
             Padding(
               padding: const EdgeInsets.only(top: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Please specify Program/Year Level or Position',
+                  const Text('Please specify the Department or College',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 17.0,
                       )),
                   const SizedBox(height: 8),
                   TextFormField(
+                    controller: _departmentCollege,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -1333,33 +1644,113 @@ class _ReportScreenState extends State<ReportScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
-                      hintText: 'Enter the Complainant\'s role',
+                      hintText: '(e.g., CSFD, CGCS, CCIS)',
                     ),
                     validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the Complainant\'s role'
+                        ? 'Please specify the Department or College'
                         : null,
                   ),
+                  const SizedBox(height: 20),
+                  const Text(
+                      'Name of the person from the department or college you\'ve reported this incident.',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _reportedTo,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      hintText: '',
+                    ),
+                    validator: (value) => value?.isEmpty ?? true
+                        ? 'Please specify to whom you reported'
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text('Have any actions been taken so far?',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17.0,
+                      )),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _actionsTaken,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    hint: const Text('Select an option'),
+                    items: ['Yes', 'No'].map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _actionsTaken = newValue;
+                      });
+                    },
+                    validator: (value) =>
+                        value == null ? 'Please select an option' : null,
+                  ),
+                  if (_actionsTaken == 'Yes')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Please describe the actions taken',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17.0,
+                              )),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _describeActionsTaken,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.grey, width: 1.0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.grey, width: 1.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                    BorderSide(color: Colors.grey, width: 2.0),
+                              ),
+                              hintText: 'Describe the actions taken',
+                            ),
+                            validator: (value) => value?.isEmpty ?? true
+                                ? 'Please describe the actions taken'
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
-          // TextFormField(
-          //   controller: _perpetratorGradeYearLevel,
-          //   decoration: const InputDecoration(
-          //     border: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     enabledBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 1.0),
-          //     ),
-          //     focusedBorder: OutlineInputBorder(
-          //       borderSide: BorderSide(color: Colors.grey, width: 2.0),
-          //     ),
-          //     hintText: "Enter Respondent's grade/year level ror position",
-          //   ),
-          //   validator: (value) => value?.isEmpty ?? true
-          //       ? 'Please enter the Respondent\'s grade/year level or position'
-          //       : null,
-          // ),
           const SizedBox(height: 20),
 
           // Have any actions been taken so far?
@@ -1426,76 +1817,6 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
             ),
           const SizedBox(height: 20),
-
-          const Text('Have any actions been taken so far?',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17.0,
-              )),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _actionsTaken,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 2.0),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16),
-            ),
-            hint: const Text('Select an option'),
-            items: ['Yes', 'No'].map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _actionsTaken = newValue;
-              });
-            },
-            validator: (value) =>
-                value == null ? 'Please select an option' : null,
-          ),
-          if (_actionsTaken == 'Yes')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Please describe the actions taken',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17.0,
-                      )),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _describeActionsTaken,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                      hintText: 'Describe the actions taken',
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please describe the actions taken'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 50),
           Row(
             children: [
               Checkbox(
@@ -1557,51 +1878,82 @@ class _ReportScreenState extends State<ReportScreen> {
     super.dispose();
   }
 
+  void _clearFormInputs() {
+    setState(() {
+      _victimNameController.clear();
+      _departmentCollege.clear();
+      _reportedTo.clear();
+      _perpetratorName.clear();
+      _describeActionsTaken.clear();
+      _witnessInfo.clear();
+      otherPlatformController.clear();
+      otherCyberbullyingController.clear();
+      witnessNamesController.clear();
+      incidentDetailsController.clear();
+      otherSupportController.clear();
+
+      _victimGradeYearLevel = null;
+      _perpetratorGradeYearLevel = null;
+      _relationship = null;
+      _victimRole = null;
+      _hasReportedBefore = null;
+      _hasWitnesses = null;
+      _agreedToPrivacyPolicy = false;
+      selectedPlatforms.clear();
+      selectedCyberbullyingTypes.clear();
+      selectedSupportTypes.clear();
+      _images.clear();
+      _currentStep = 0;
+    });
+  }
+
   _successMessage(BuildContext context) {
-    return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Container(
-        padding: const EdgeInsets.all(8),
-        height: 80,
-        decoration: const BoxDecoration(
-          color: Color.fromARGB(255, 81, 146, 83),
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-        child: const Row(
-          children: [
-            Icon(
-              Icons.check_circle,
-              color: Colors.white,
-              size: 40,
-            ),
-            SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Success",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    "Your report has been submitted!",
-                    style: TextStyle(color: Colors.white, fontSize: 12),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+    return ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Container(
+          padding: const EdgeInsets.all(8),
+          height: 80,
+          decoration: const BoxDecoration(
+            color: Color.fromARGB(255, 81, 146, 83),
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          child: const Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 40,
               ),
-            ),
-          ],
+              SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Success",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Your report has been submitted!",
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-    ));
+    );
   }
 }
