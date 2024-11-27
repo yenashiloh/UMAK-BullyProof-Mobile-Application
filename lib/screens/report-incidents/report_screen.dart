@@ -2,6 +2,9 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'package:gallery_picker/gallery_picker.dart';
+import 'package:gallery_picker/models/media_file.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:http/http.dart' as http;
 import 'package:bully_proof_umak/config.dart';
 import 'package:flutter/material.dart';
@@ -40,10 +43,10 @@ class _ReportScreenState extends State<ReportScreen> {
   String? _actionsTaken;
 
   final otherRelationship = TextEditingController();
-  final otherVictimRole = TextEditingController();
-  final otherVictimGradeYearLevelController = TextEditingController();
-  final otherPerpetratorRole = TextEditingController();
-  final otherPerpetratorGradeYearLevelController = TextEditingController();
+  // final otherVictimRole = TextEditingController();
+  // final otherVictimGradeYearLevelController = TextEditingController();
+  // final otherPerpetratorRole = TextEditingController();
+  // final otherPerpetratorGradeYearLevelController = TextEditingController();
   final otherPlatformController = TextEditingController();
   final otherCyberbullyingController = TextEditingController();
   final witnessNamesController = TextEditingController();
@@ -59,6 +62,8 @@ class _ReportScreenState extends State<ReportScreen> {
 
   List<File> _images = [];
   final picker = ImagePicker();
+  List<File> _selectedImages = [];
+  File? selectedMedia;
 
   Future<void> getImage() async {
     // Allow selecting multiple images
@@ -72,6 +77,48 @@ class _ReportScreenState extends State<ReportScreen> {
     } else {
       print("No images were picked.");
     }
+  }
+
+  Future<void> selectImage() async {
+    // Allow selecting multiple images
+    final pickedImages = await picker.pickMultiImage();
+    if (pickedImages.isNotEmpty) {
+      setState(() {
+        // Add selected images to the list
+        _selectedImages =
+            pickedImages.map((pickedImage) => File(pickedImage.path)).toList();
+      });
+      await _processImages();
+    } else {
+      print("No images were picked.");
+    }
+  }
+
+  Future<String?> _extractText(File file) async {
+    final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    final InputImage inputImage = InputImage.fromFile(file);
+    final RecognizedText recognizedText =
+        await textRecognizer.processImage(inputImage);
+    String text = recognizedText.text;
+    textRecognizer.close();
+    return text;
+  }
+
+  Future<void> _processImages() async {
+    showLoadingDialog(context);
+
+    String combinedText = "";
+    for (var file in _selectedImages) {
+      final text = await _extractText(file);
+      if (text != null && text.isNotEmpty) {
+        combinedText += "$text\n";
+      }
+    }
+
+    setState(() {
+      hideLoadingDialog(context);
+      incidentDetailsController.text = combinedText;
+    });
   }
 
   // Capture image from camera
@@ -111,9 +158,7 @@ class _ReportScreenState extends State<ReportScreen> {
       "otherVictimRelationship": otherRelationship.text,
       "victimName": _victimNameController.text,
       "victimType": _victimRole,
-      "otherVictimType": otherVictimRole.text,
       "gradeYearLevel": _victimGradeYearLevel,
-      "otherGradeYearLevel": otherVictimGradeYearLevelController.text,
       "hasReportedBefore": _hasReportedBefore,
       "departmentCollege": _departmentCollege.text,
       "reportedTo": _reportedTo.text,
@@ -125,10 +170,7 @@ class _ReportScreenState extends State<ReportScreen> {
       "incidentEvidence": base64Images,
       "perpetratorName": _perpetratorName.text,
       "perpetratorRole": _perpetratorRole,
-      "otherPerpetratorRole": otherPerpetratorRole.text,
       "perpetratorGradeYearLevel": _perpetratorGradeYearLevel,
-      "otherPerpetratorGradeYearLevel":
-          otherPerpetratorGradeYearLevelController.text,
       "supportTypes": selectedSupportTypes,
       "otherSupportTypes": otherSupportController.text,
       "actionsTaken": _actionsTaken,
@@ -505,14 +547,6 @@ class _ReportScreenState extends State<ReportScreen> {
               "Please select the Complainant's role in the university";
           isValid = false;
           break;
-        } else if (_victimRole == 'Other') {
-          if (otherVictimRole.text.isEmpty) {
-            _logger.warning('Other Complainant role not specified');
-            errorMessage =
-                'Please specify the Complainant\'s role in the university';
-            isValid = false;
-            break;
-          }
         }
 
         // Validate victim grade/year level
@@ -522,14 +556,6 @@ class _ReportScreenState extends State<ReportScreen> {
               "Please select the Complainant's Program/Year Level or Position";
           isValid = false;
           break;
-        } else if (_victimGradeYearLevel == 'Other') {
-          if (otherVictimGradeYearLevelController.text.isEmpty) {
-            _logger.warning('Other Complainant grade/year level not specified');
-            errorMessage =
-                'Please specify the Complainant\'s Program/Year Level or Position';
-            isValid = false;
-            break;
-          }
         }
 
         // Validate perpetrator name
@@ -547,15 +573,6 @@ class _ReportScreenState extends State<ReportScreen> {
               "Please select the Complainee's role in the university";
           isValid = false;
           break;
-        } else if (_perpetratorRole == 'Other') {
-          if (otherPerpetratorRole.text.isEmpty) {
-            _logger.warning(
-                'Other Complainee\'s role in the university not specified');
-            errorMessage =
-                'Please specify the Complainee\'s role in the university';
-            isValid = false;
-            break;
-          }
         }
 
         // Validate perpetrator grade/year level
@@ -565,15 +582,6 @@ class _ReportScreenState extends State<ReportScreen> {
               "Please select the Complainee's Program/Year Level or Position";
           isValid = false;
           break;
-        } else if (_perpetratorGradeYearLevel == 'Other') {
-          if (otherPerpetratorGradeYearLevelController.text.isEmpty) {
-            _logger.warning(
-                'Other Complainee\'s Program/Year Level or Position not specified');
-            errorMessage =
-                'Please specify the Complainee\'s Program/Year Level or Position';
-            isValid = false;
-            break;
-          }
         }
         break;
       case 2:
@@ -844,17 +852,20 @@ class _ReportScreenState extends State<ReportScreen> {
           const SizedBox(height: 8),
           TextFormField(
             controller: _victimNameController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
-              enabledBorder: OutlineInputBorder(
+              enabledBorder: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
-              focusedBorder: OutlineInputBorder(
+              focusedBorder: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
-              hintText: "Surname, First Name M.I", // Added hint text
+              hintText: "Surname, First Name M.I",
+              hintStyle: TextStyle(
+                color: Colors.black.withOpacity(0.6),
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -885,8 +896,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             hint: const Text('Select role in the university'),
             value: _victimRole,
-            items: ['Student', 'School Staff', 'Professor', 'Other']
-                .map((String value) {
+            items: ['Student', 'School Staff', 'Professor'].map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -900,39 +910,6 @@ class _ReportScreenState extends State<ReportScreen> {
             validator: (value) =>
                 value == null ? 'Please select the Complainant\'s role' : null,
           ),
-          if (_victimRole == 'Other')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Please specify the Complainant\'s role',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17.0,
-                      )),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: otherVictimRole,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                      hintText: 'Enter the Complainant\'s role',
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the Complainant\'s role'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
           const SizedBox(height: 20),
 
           const Text(
@@ -964,9 +941,9 @@ class _ReportScreenState extends State<ReportScreen> {
               '2nd Year College',
               '3rd Year College',
               '4th Year College',
+              '5th Year College',
               'Professor',
               'staff',
-              'Other'
             ].map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -982,40 +959,6 @@ class _ReportScreenState extends State<ReportScreen> {
                 ? 'Please select Program/Year Level or Position'
                 : null,
           ),
-          if (_victimGradeYearLevel == 'Other')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Please specify Program/Year Level or Position',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17.0,
-                      )),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: otherVictimGradeYearLevelController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                      hintText:
-                          'Enter the Complainant\'s Program/Year Level or Position',
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the Complainant\'s Program/Year Level or Position'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
           const SizedBox(height: 20),
           const Text("Complainee's Name",
               style: TextStyle(
@@ -1025,17 +968,20 @@ class _ReportScreenState extends State<ReportScreen> {
           const SizedBox(height: 8),
           TextFormField(
             controller: _perpetratorName,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
-              enabledBorder: OutlineInputBorder(
+              enabledBorder: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
-              focusedBorder: OutlineInputBorder(
+              focusedBorder: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 2.0),
               ),
               hintText: "Surname, First Name M.I",
+              hintStyle: TextStyle(
+                color: Colors.black.withOpacity(0.6),
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -1067,8 +1013,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             hint: const Text('Select role in the university'),
             value: _perpetratorRole,
-            items: ['Student', 'Professor', 'School Staff', 'Other']
-                .map((String value) {
+            items: ['Student', 'Professor', 'School Staff'].map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -1082,39 +1027,6 @@ class _ReportScreenState extends State<ReportScreen> {
             validator: (value) =>
                 value == null ? 'Please select the Complainee\'s role' : null,
           ),
-          if (_perpetratorRole == 'Other')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Please specify the Complainee\'s role',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17.0,
-                      )),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: otherPerpetratorRole,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                      hintText: 'Enter the Complainee\'s role',
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the Complainee\'s role'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
           const SizedBox(height: 20),
           const Text(
             "Complainee’s Program/Year Level or Position",
@@ -1145,9 +1057,9 @@ class _ReportScreenState extends State<ReportScreen> {
               '2nd Year College',
               '3rd Year College',
               '4th Year College',
+              '5th Year College',
               'Professor',
               'staff',
-              'Other'
             ].map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -1163,39 +1075,6 @@ class _ReportScreenState extends State<ReportScreen> {
                 ? 'Please select Program/Year Level or Position'
                 : null,
           ),
-          if (_perpetratorGradeYearLevel == 'Other')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Please specify Program/Year Level or Position',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17.0,
-                      )),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: otherPerpetratorGradeYearLevelController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                      hintText: 'Enter the Complainee\'s role',
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify the Complainee\'s role'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
           const SizedBox(height: 20),
         ],
       ),
@@ -1275,17 +1154,20 @@ class _ReportScreenState extends State<ReportScreen> {
                   const SizedBox(height: 8.0),
                   TextFormField(
                     controller: otherPlatformController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.blue, width: 2.0),
                       ),
                       hintText: 'Enter other platform',
+                      hintStyle: TextStyle(
+                        color: Colors.black.withOpacity(0.6),
+                      ),
                     ),
                     validator: (value) {
                       if (selectedPlatforms
@@ -1422,17 +1304,20 @@ class _ReportScreenState extends State<ReportScreen> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _witnessInfo,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
                       hintText: 'Name / Contact',
+                      hintStyle: TextStyle(
+                        color: Colors.black.withOpacity(0.6),
+                      ),
                     ),
                     validator: (value) => value?.isEmpty ?? true
                         ? 'Please specify witness information'
@@ -1455,7 +1340,7 @@ class _ReportScreenState extends State<ReportScreen> {
             child: SizedBox(
               width: 880,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: selectImage,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 228, 228, 228),
                   foregroundColor: const Color.fromARGB(255, 44, 44, 44),
@@ -1468,16 +1353,19 @@ class _ReportScreenState extends State<ReportScreen> {
           TextFormField(
             controller: incidentDetailsController,
             maxLines: 6,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              focusedBorder: OutlineInputBorder(
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              focusedBorder: const OutlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFF1A4594), width: 1.0),
               ),
-              enabledBorder: OutlineInputBorder(
+              enabledBorder: const OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
               hintText:
                   'Enter detailed description of the incident here (Maximum of 500 words)...',
+              hintStyle: TextStyle(
+                color: Colors.black.withOpacity(0.6),
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -1634,17 +1522,20 @@ class _ReportScreenState extends State<ReportScreen> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _departmentCollege,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
                       hintText: '(e.g., CSFD, CGCS, CCIS)',
+                      hintStyle: TextStyle(
+                        color: Colors.black.withOpacity(0.6),
+                      ),
                     ),
                     validator: (value) => value?.isEmpty ?? true
                         ? 'Please specify the Department or College'
@@ -1660,17 +1551,20 @@ class _ReportScreenState extends State<ReportScreen> {
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _reportedTo,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 2.0),
                       ),
-                      hintText: '',
+                      hintText: 'Full Name',
+                      hintStyle: TextStyle(
+                        color: Colors.black.withOpacity(0.6),
+                      ),
                     ),
                     validator: (value) => value?.isEmpty ?? true
                         ? 'Please specify to whom you reported'
@@ -1726,20 +1620,23 @@ class _ReportScreenState extends State<ReportScreen> {
                           const SizedBox(height: 8),
                           TextFormField(
                             controller: _describeActionsTaken,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Colors.grey, width: 1.0),
                               ),
-                              enabledBorder: OutlineInputBorder(
+                              enabledBorder: const OutlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Colors.grey, width: 1.0),
                               ),
-                              focusedBorder: OutlineInputBorder(
+                              focusedBorder: const OutlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Colors.grey, width: 2.0),
                               ),
                               hintText: 'Describe the actions taken',
+                              hintStyle: TextStyle(
+                                color: Colors.black.withOpacity(0.6),
+                              ),
                             ),
                             validator: (value) => value?.isEmpty ?? true
                                 ? 'Please describe the actions taken'
@@ -1792,17 +1689,20 @@ class _ReportScreenState extends State<ReportScreen> {
                   const SizedBox(height: 8.0),
                   TextFormField(
                     controller: otherSupportController,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      enabledBorder: OutlineInputBorder(
+                      enabledBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.grey, width: 1.0),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderSide: BorderSide(color: Colors.blue, width: 2.0),
                       ),
                       hintText: 'Specify other support',
+                      hintStyle: TextStyle(
+                        color: Colors.black.withOpacity(0.6),
+                      ),
                     ),
                     validator: (value) {
                       if (selectedCyberbullyingTypes
@@ -1891,11 +1791,13 @@ class _ReportScreenState extends State<ReportScreen> {
       witnessNamesController.clear();
       incidentDetailsController.clear();
       otherSupportController.clear();
-
+      _agreementChecked = false;
+      _actionsTaken = null;
       _victimGradeYearLevel = null;
       _perpetratorGradeYearLevel = null;
       _relationship = null;
       _victimRole = null;
+      _perpetratorRole = null;
       _hasReportedBefore = null;
       _hasWitnesses = null;
       _agreedToPrivacyPolicy = false;
@@ -1955,5 +1857,55 @@ class _ReportScreenState extends State<ReportScreen> {
         elevation: 0,
       ),
     );
+  }
+
+  void showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 5,
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(24),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  strokeWidth: 4,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1A4594)),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  'Converting image to text...',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void hideLoadingDialog(BuildContext context) {
+    Navigator.of(context).pop();
   }
 }

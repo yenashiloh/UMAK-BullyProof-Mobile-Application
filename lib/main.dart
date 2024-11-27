@@ -140,6 +140,133 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _markNotificationAsReadAsync(String notificationId) async {
+    final markReadUrl = '${url}notifications/mark-read/$notificationId';
+    try {
+      final response = await http.put(
+        Uri.parse(markReadUrl),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _userNotif = _userNotif.map((notif) {
+            if (notif['_id'] == notificationId) {
+              return {...notif, 'status': 'read'};
+            }
+            return notif;
+          }).toList();
+        });
+      } else {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to mark notification as read')),
+        );
+      }
+    } catch (e) {
+      print('Error marking notification as read: $e');
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error marking notification as read')),
+      );
+    }
+  }
+
+  Future<void> _markAllNotificationsAsRead() async {
+    const markAllReadUrl = '${url}notifications/mark-all-read';
+    try {
+      // Log the token being used
+      print('Authorization Token: ${widget.token}');
+
+      // Log the current unread notifications
+      print('Current Notifications Before Update:');
+      for (var notif in _userNotif) {
+        print('Notification: ${notif['_id']}, Status: ${notif['status']}');
+      }
+
+      final response = await http.put(
+        Uri.parse(markAllReadUrl),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        // Parse the response to get update details
+        final responseBody = json.decode(response.body);
+        final matchedCount = responseBody['matchedCount'] ?? 0;
+        final modifiedCount = responseBody['modifiedCount'] ?? 0;
+
+        print('Matched Notifications: $matchedCount');
+        print('Modified Notifications: $modifiedCount');
+
+        setState(() {
+          _userNotif = _userNotif.map((notif) {
+            return {...notif, 'status': 'read'};
+          }).toList();
+        });
+
+        if (matchedCount == 0 || modifiedCount == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'No notifications were marked as read. Matched: $matchedCount, Modified: $modifiedCount')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  'Failed to mark all notifications as read. Status: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      print('Error marking all notifications as read: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error marking all notifications as read: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteNotification(String notificationId) async {
+    final deleteUrl = '${url}notifications/$notificationId';
+    try {
+      final response = await http.delete(
+        Uri.parse(deleteUrl),
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // Remove the notification from local state
+        setState(() {
+          _userNotif.removeWhere((notif) => notif['_id'] == notificationId);
+        });
+      } else {
+        // Handle error
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete notification')),
+        );
+      }
+    } catch (e) {
+      print('Error deleting notification: $e');
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error deleting notification')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,6 +324,10 @@ class HomePageState extends State<HomePage> {
             token: widget.token,
             userId: userId,
             isLoading: _isLoading,
+            onMarkRead: _markNotificationAsReadAsync,
+            onMarkAllRead: _markAllNotificationsAsRead,
+            onDelete: _deleteNotification,
+            context: context,
           ),
           const ProfileScreen(),
         ],

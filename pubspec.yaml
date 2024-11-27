@@ -46,6 +46,8 @@ dependencies:
   cupertino_icons: ^1.0.6
   smooth_page_indicator: ^1.2.0+3
   image_picker: ^1.1.2
+  google_mlkit_text_recognition: ^0.14.0
+  gallery_picker:
 
 dev_dependencies:
   flutter_test:

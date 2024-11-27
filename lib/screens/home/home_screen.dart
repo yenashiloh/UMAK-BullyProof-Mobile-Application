@@ -23,7 +23,8 @@ class HomeScreen extends StatelessWidget {
             child: Text.rich(
               TextSpan(
                 text: "Welcome, ", // Regular text
-                style: const TextStyle(fontSize: 20), // Style for the regular text
+                style:
+                    const TextStyle(fontSize: 20), // Style for the regular text
                 children: <TextSpan>[
                   TextSpan(
                     text: email, // Bold text
@@ -102,7 +103,7 @@ class HomeScreen extends StatelessWidget {
             description:
                 'If you or someone you know is experiencing the distress of cyberbullying, you are not alone. Our dedicated team of trained counselors is here to provide a safe, confidential space for you to share your experiences and feelings.',
             buttonText: 'Seek Help',
-            onButtonPressed: onSeekHelpButtonPressed,
+            onButtonPressed: () {},
           ),
         ],
       ),
