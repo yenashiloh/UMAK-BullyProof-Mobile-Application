@@ -2,8 +2,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'package:gallery_picker/gallery_picker.dart';
-import 'package:gallery_picker/models/media_file.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:http/http.dart' as http;
 import 'package:bully_proof_umak/config.dart';
@@ -793,7 +791,7 @@ class _ReportScreenState extends State<ReportScreen> {
             ),
             hint: const Text('Select Relationship to the Complainant'),
             value: _relationship,
-            items: ['Self', 'Parent/Guardian', 'Professor', 'Friend', 'Other']
+            items: ['Myself', 'Professor', 'Friend']
                 .map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -809,39 +807,39 @@ class _ReportScreenState extends State<ReportScreen> {
                 ? 'Please select your relationship to the Complainant'
                 : null,
           ),
-          if (_relationship == 'Other')
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                      'Please specify your relationship to the Complainant',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17.0,
-                      )),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: otherRelationship,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey, width: 2.0),
-                      ),
-                    ),
-                    validator: (value) => value?.isEmpty ?? true
-                        ? 'Please specify your relationship'
-                        : null,
-                  ),
-                ],
-              ),
-            ),
+          // if (_relationship == 'Other')
+          //   Padding(
+          //     padding: const EdgeInsets.only(top: 16),
+          //     child: Column(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         const Text(
+          //             'Please specify your relationship to the Complainant',
+          //             style: TextStyle(
+          //               fontWeight: FontWeight.bold,
+          //               fontSize: 17.0,
+          //             )),
+          //         const SizedBox(height: 8),
+          //         TextFormField(
+          //           controller: otherRelationship,
+          //           decoration: const InputDecoration(
+          //             border: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //             ),
+          //             enabledBorder: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 1.0),
+          //             ),
+          //             focusedBorder: OutlineInputBorder(
+          //               borderSide: BorderSide(color: Colors.grey, width: 2.0),
+          //             ),
+          //           ),
+          //           validator: (value) => value?.isEmpty ?? true
+          //               ? 'Please specify your relationship'
+          //               : null,
+          //         ),
+          //       ],
+          //     ),
+          //   ),
           const SizedBox(height: 20),
 
           const Text("Complainant's Name",

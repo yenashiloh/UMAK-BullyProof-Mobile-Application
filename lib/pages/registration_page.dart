@@ -24,73 +24,81 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _obscurePassword = true;
   bool _obscureCPassword = true;
-  bool _isNotValidate = false;
-  bool _doPasswordsMatch = true;
-  bool _isRoleNotSelected = false;
-  bool _isContactInvalid = false;
-
-  bool isFullnameEmpty = false;
-  bool isEmailEmpty = false;
-  bool isContactEmpty = false;
-  bool isPasswordEmpty = false;
-  bool isCPasswordEmpty = false;
-  bool _isPasswordFocused = false;
-
+  bool _showValidations = false;
   String? _selectedRole;
 
-  final List<String> _roles = ["Student", "Parent", "Professor", "Staff"];
-  List<String> _passwordErrors = [];
+  final List<String> _roles = ["Student", "Professor", "Staff"];
 
-  final FocusNode _passwordFocusNode = FocusNode();
-  bool _isPasswordValid = false;
+  // Validation states
+  bool get isFullnameValid => fullnameController.text.isNotEmpty;
+  bool get isEmailValid => isValidUmakEmail(emailController.text);
+  bool get isContactValid => contactController.text.length == 11;
+  bool get isPasswordValid =>
+      _checkPasswordRequirements(passwordController.text);
+  bool get doPasswordsMatch =>
+      passwordController.text == cpasswordController.text;
+  bool get isRoleSelected => _selectedRole != null;
+
+  // Password requirements
+  final Map<String, bool> _passwordRequirements = {
+    "length": false,
+    "uppercase": false,
+    "lowercase": false,
+    "number": false,
+    "special": false,
+  };
 
   @override
   void initState() {
     super.initState();
-    passwordController.addListener(_validatePassword);
-    cpasswordController.addListener(_validatePasswords);
-
-    _passwordFocusNode.addListener(() {
-      setState(() {
-        _isPasswordFocused = _passwordFocusNode.hasFocus;
-        if (!_isPasswordFocused) {
-          _isPasswordValid = false;
-        }
-      });
+    // Add listeners to update validations in real-time once shown
+    fullnameController
+        .addListener(() => _showValidations ? setState(() {}) : null);
+    emailController
+        .addListener(() => _showValidations ? setState(() {}) : null);
+    contactController
+        .addListener(() => _showValidations ? setState(() {}) : null);
+    passwordController.addListener(() {
+      if (_showValidations) {
+        _updatePasswordRequirements();
+        setState(() {});
+      }
     });
+    cpasswordController
+        .addListener(() => _showValidations ? setState(() {}) : null);
   }
 
-  void _validatePasswords() {
-    setState(() {
-      _doPasswordsMatch = passwordController.text == cpasswordController.text;
-    });
-    _validatePassword();
+  @override
+  void dispose() {
+    fullnameController.dispose();
+    emailController.dispose();
+    contactController.dispose();
+    passwordController.dispose();
+    cpasswordController.dispose();
+    super.dispose();
   }
 
-  void _validatePassword() {
+  bool isValidUmakEmail(String email) {
+    return email.toLowerCase().endsWith('@umak.edu.ph');
+  }
+
+  bool _checkPasswordRequirements(String password) {
+    return password.length > 8 &&
+        RegExp(r'[A-Z]').hasMatch(password) &&
+        RegExp(r'[a-z]').hasMatch(password) &&
+        RegExp(r'[0-9]').hasMatch(password) &&
+        RegExp(r'[!@#\$&*~.]').hasMatch(password);
+  }
+
+  void _updatePasswordRequirements() {
+    final password = passwordController.text;
     setState(() {
-      final password = passwordController.text;
-      List<String> errors = [];
-
-      if (password.length <= 8) {
-        errors.add("Password must be over 8 characters");
-      }
-      if (!RegExp(r'[A-Z]').hasMatch(password)) {
-        errors.add("Password must contain 1 uppercase letter");
-      }
-      if (!RegExp(r'[a-z]').hasMatch(password)) {
-        errors.add("Password must contain 1 lowercase letter");
-      }
-      if (!RegExp(r'[0-9]').hasMatch(password)) {
-        errors.add("Password must contain 1 number");
-      }
-      if (!RegExp(r'[!@#\$&*~]').hasMatch(password)) {
-        errors.add("Password must contain 1 special character");
-      }
-
-      // Update the state with the error messages
-      _passwordErrors = errors;
-      _isPasswordValid = errors.isEmpty;
+      _passwordRequirements["length"] = password.length > 8;
+      _passwordRequirements["uppercase"] = RegExp(r'[A-Z]').hasMatch(password);
+      _passwordRequirements["lowercase"] = RegExp(r'[a-z]').hasMatch(password);
+      _passwordRequirements["number"] = RegExp(r'[0-9]').hasMatch(password);
+      _passwordRequirements["special"] =
+          RegExp(r'[!@#\$&*~.]').hasMatch(password);
     });
   }
 
@@ -106,13 +114,6 @@ class _RegisterPageState extends State<RegisterPage> {
     });
   }
 
-  // void _onCreateAccountPressed() {
-  //   Navigator.pushReplacement(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => const LoginPage()),
-  //   );
-  // }
-
   void _onLoginPressed() {
     Navigator.pushReplacement(
       context,
@@ -120,73 +121,254 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
+  void _showVerificationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  spreadRadius: 5,
+                  blurRadius: 15,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E3A8A).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.mark_email_unread_rounded,
+                    color: Color(0xFF1E3A8A),
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "Verify Your Email",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E3A8A),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "We've sent a verification link to your email address. Please verify your email to complete the registration process.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black54,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginPage()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E3A8A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    "Continue to Login",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildValidationText(String text, bool isValid) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2.0),
+      child: Row(
+        children: [
+          Icon(
+            isValid ? Icons.check_circle : Icons.error,
+            color: isValid ? Colors.green : Colors.red,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              color: isValid ? Colors.green : Colors.red,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildValidations() {
+    if (!_showValidations) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isFullnameValid)
+            _buildValidationText('Full name is required', false),
+          if (!isEmailValid)
+            _buildValidationText(
+                'Valid UMak email (@umak.edu.ph) is required', false),
+          if (!isContactValid)
+            _buildValidationText('Contact number must be 11 digits', false),
+          if (!isRoleSelected)
+            _buildValidationText('Please select an account type', false),
+
+          // Password requirements
+          if (passwordController.text.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Password Requirements:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 4),
+            _buildValidationText(
+                'At least 8 characters', _passwordRequirements["length"]!),
+            _buildValidationText(
+                'One uppercase letter', _passwordRequirements["uppercase"]!),
+            _buildValidationText(
+                'One lowercase letter', _passwordRequirements["lowercase"]!),
+            _buildValidationText(
+                'One number', _passwordRequirements["number"]!),
+            _buildValidationText('One special character (!@#\$&*~.)',
+                _passwordRequirements["special"]!),
+          ],
+
+          if (cpasswordController.text.isNotEmpty && !doPasswordsMatch)
+            _buildValidationText('Passwords do not match', false),
+        ],
+      ),
+    );
+  }
+
   void registerUser() async {
     setState(() {
-      isFullnameEmpty = fullnameController.text.isEmpty;
-      isEmailEmpty = emailController.text.isEmpty;
-      isContactEmpty = contactController.text.isEmpty;
-      isPasswordEmpty = passwordController.text.isEmpty;
-      isCPasswordEmpty = cpasswordController.text.isEmpty;
-
-      _isContactInvalid =
-          contactController.text.length != 11 && !isContactEmpty;
-      _isRoleNotSelected = _selectedRole == null;
-
-      _isNotValidate = isFullnameEmpty ||
-          isEmailEmpty ||
-          isContactEmpty ||
-          isPasswordEmpty ||
-          isCPasswordEmpty;
+      _showValidations = true;
     });
 
-    if (_isNotValidate ||
-        _isContactInvalid ||
-        _isRoleNotSelected ||
-        !_doPasswordsMatch ||
-        !_isPasswordValid) {
+    if (!isFullnameValid ||
+        !isEmailValid ||
+        !isContactValid ||
+        !isPasswordValid ||
+        !doPasswordsMatch ||
+        !isRoleSelected) {
       return;
     }
 
-    var regBody = {
-      "fullname": fullnameController.text,
-      "email": emailController.text,
-      "contact": contactController.text,
-      "password": passwordController.text,
-      "type": _selectedRole,
-    };
-
-    var response = await http.post(
-      Uri.parse(registration),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(regBody),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  color: Color(0xFF1E3A8A),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "Creating your account...",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
 
-    var jsonResponse = jsonDecode(response.body);
+    try {
+      var regBody = {
+        "fullname": fullnameController.text,
+        "email": emailController.text,
+        "contact": contactController.text,
+        "password": passwordController.text,
+        "type": _selectedRole,
+      };
 
-    if (jsonResponse['status']) {
-      // ignore: use_build_context_synchronously
-      _successMessage(context);
-      Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+      var response = await http.post(
+        Uri.parse(registration),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(regBody),
       );
-    } else {
-      // ignore: use_build_context_synchronously
-      _errorMessage(context, jsonResponse['message'] ?? "Registration Failed");
-    }
-  }
 
-  @override
-  void dispose() {
-    // Dispose the controllers
-    fullnameController.dispose();
-    emailController.dispose();
-    contactController.dispose();
-    passwordController.dispose();
-    cpasswordController.dispose();
-    _passwordFocusNode.dispose();
-    super.dispose();
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop(); // Close loading dialog
+
+      var jsonResponse = jsonDecode(response.body);
+
+      if (jsonResponse['status']) {
+        // ignore: use_build_context_synchronously
+        _successMessage(context);
+        // ignore: use_build_context_synchronously
+        _showVerificationDialog(); // Show verification dialog before redirecting
+      } else {
+        // ignore: use_build_context_synchronously
+        _errorMessage(
+            context, jsonResponse['message'] ?? "Registration Failed");
+      }
+    } catch (e) {
+      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop(); // Close loading dialog
+      // ignore: use_build_context_synchronously
+      _errorMessage(context, "Registration failed. Please try again later.");
+    }
   }
 
   @override
@@ -226,7 +408,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: 'Enter your full name',
                     labelText: 'Full Name',
                     obscureText: false,
-                    errorText: isFullnameEmpty ? "Field cannot be empty" : null,
                   ),
                   const SizedBox(height: 20),
                   UserTextfield(
@@ -234,7 +415,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: 'your_umakemail@umak.edu.ph',
                     labelText: 'Email',
                     obscureText: false,
-                    errorText: isEmailEmpty ? "Field cannot be empty" : null,
                   ),
                   const SizedBox(height: 20),
                   UserTextfield(
@@ -242,11 +422,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     hintText: '+09',
                     labelText: 'Contact No.',
                     obscureText: false,
-                    errorText: isContactEmpty
-                        ? "Field cannot be empty"
-                        : _isContactInvalid
-                            ? "Contact number must be 11 digits"
-                            : null,
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(11),
@@ -258,7 +433,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     labelText: 'Password',
                     hintText: '•••••••••••••',
                     obscureText: _obscurePassword,
-                    focusNode: _passwordFocusNode,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -268,24 +442,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       onPressed: _togglePasswordVisibility,
                     ),
-                    errorText: isPasswordEmpty ? "Field cannot be empty" : null,
                   ),
-                  const SizedBox(height: 5),
-                  if (_isPasswordFocused && !_isPasswordValid) ...[
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _passwordErrors.map((error) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 120.0),
-                          child: Text(
-                            error,
-                            style: const TextStyle(
-                                color: Colors.red, fontSize: 12),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
                   const SizedBox(height: 20),
                   UserTextfield(
                     controller: cpasswordController,
@@ -301,11 +458,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       onPressed: _toggleCPasswordVisibility,
                     ),
-                    errorText: isCPasswordEmpty
-                        ? "Field cannot be empty"
-                        : !_doPasswordsMatch
-                            ? "Passwords do not match"
-                            : null,
                   ),
                   const SizedBox(height: 20),
                   Padding(
@@ -326,8 +478,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       }).toList(),
                       onChanged: (String? newValue) {
                         setState(() {
-                          _selectedRole = newValue; // Update selected role
-                          _isRoleNotSelected = false;
+                          _selectedRole = newValue;
                         });
                       },
                       decoration: InputDecoration(
@@ -352,9 +503,6 @@ class _RegisterPageState extends State<RegisterPage> {
                             const EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0),
                         fillColor: Colors.white,
                         filled: true,
-                        errorText: _isRoleNotSelected
-                            ? "Please select an account type"
-                            : null,
                       ),
                       style: const TextStyle(
                         fontSize: 18,
@@ -363,7 +511,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 50),
+                  const SizedBox(height: 20),
+                  _buildValidations(),
+                  const SizedBox(height: 30),
                   RegisterBtn(
                     onPressed: registerUser,
                   ),
@@ -372,10 +522,11 @@ class _RegisterPageState extends State<RegisterPage> {
                     text: TextSpan(
                       children: [
                         const TextSpan(
-                            text: "Already have an account? ",
-                            style: TextStyle(
-                              color: Colors.black,
-                            )),
+                          text: "Already have an account? ",
+                          style: TextStyle(
+                            color: Colors.black,
+                          ),
+                        ),
                         TextSpan(
                           text: "Login",
                           style: const TextStyle(
