@@ -27,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureCPassword = true;
   bool _showValidations = false;
+  bool _isLoading = false; // New loading state
   String? _selectedRole;
   String? _selectedProgramOrPosition;
 
@@ -215,8 +216,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                     const SizedBox(height: 24),
-
-                    // Title
                     const Text(
                       "Verify Your Email",
                       style: TextStyle(
@@ -226,8 +225,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Description
                     Text(
                       "We've sent a verification link to ${emailController.text}",
                       textAlign: TextAlign.center,
@@ -248,7 +245,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
                     TextButton(
                       onPressed: canResend
                           ? () async {
@@ -282,7 +278,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                                 var jsonResponse = jsonDecode(response.body);
                                 if (jsonResponse['status']) {
-                                  // ignore: use_build_context_synchronously
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(
@@ -291,7 +286,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ),
                                   );
                                 } else {
-                                  // ignore: use_build_context_synchronously
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(jsonResponse['message'] ??
@@ -301,9 +295,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   );
                                 }
                               } catch (e) {
-                                // ignore: avoid_print
                                 print('Error resending verification: $e');
-                                // ignore: use_build_context_synchronously
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(
@@ -350,8 +342,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 24),
-
-                    // Continue to Login Button
                     ElevatedButton(
                       onPressed: () {
                         countdownTimer?.cancel();
@@ -416,7 +406,9 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildValidations() {
-    if (!_showValidations) return const SizedBox.shrink();
+    if (!_showValidations || _isLoading) {
+      return const SizedBox.shrink(); // Hide during loading
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -436,8 +428,6 @@ class _RegisterPageState extends State<RegisterPage> {
             _buildValidationText('Please select an account type', false),
           if (!isProgramOrPositionSelected)
             _buildValidationText('Please select a program or position', false),
-
-          // Password requirements
           if (passwordController.text.isNotEmpty) ...[
             const SizedBox(height: 8),
             const Text(
@@ -460,7 +450,6 @@ class _RegisterPageState extends State<RegisterPage> {
             _buildValidationText('One special character (!@#\$&*~.)',
                 _passwordRequirements["special"]!),
           ],
-
           if (cpasswordController.text.isNotEmpty && !doPasswordsMatch)
             _buildValidationText('Passwords do not match', false),
         ],
@@ -483,6 +472,11 @@ class _RegisterPageState extends State<RegisterPage> {
         !isProgramOrPositionSelected) {
       return;
     }
+
+    setState(() {
+      _isLoading = true;
+      _showValidations = false;
+    });
 
     showDialog(
       context: context,
@@ -535,28 +529,28 @@ class _RegisterPageState extends State<RegisterPage> {
         body: jsonEncode(regBody),
       );
 
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop(); // Close loading dialog
+      Navigator.of(context).pop();
 
       var jsonResponse = jsonDecode(response.body);
 
       if (jsonResponse['status']) {
-        // ignore: use_build_context_synchronously
+        setState(() {
+          _showValidations = false; // Reset validations on success
+        });
         _successMessage(context);
-        // ignore: use_build_context_synchronously
-        _showVerificationDialog(); // Show verification dialog before redirecting
+        _showVerificationDialog();
       } else {
-        // ignore: use_build_context_synchronously
         _errorMessage(
-            // ignore: use_build_context_synchronously
-            context,
-            jsonResponse['message'] ?? "Registration Failed");
+            context, jsonResponse['message'] ?? "Registration Failed");
       }
     } catch (e) {
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop(); // Close loading dialog
-      // ignore: use_build_context_synchronously
+      Navigator.of(context).pop();
       _errorMessage(context, "Registration failed. Please try again later.");
+    } finally {
+      setState(() {
+        _isLoading = false;
+        // Do not reset _showValidations here on error to keep showing validations if needed
+      });
     }
   }
 
@@ -642,7 +636,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Full Name
                     UserTextfield(
                       controller: fullnameController,
                       labelText: 'Full Name *',
@@ -653,7 +646,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    // Email
                     UserTextfield(
                       controller: emailController,
                       labelText: 'Email *',
@@ -664,7 +656,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    // Contact No.
                     UserTextfield(
                       controller: contactController,
                       labelText: 'Contact No. *',
@@ -679,7 +670,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    // Password
                     UserTextfield(
                       controller: passwordController,
                       labelText: 'Password *',
@@ -699,7 +689,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    // Confirm Password
                     UserTextfield(
                       controller: cpasswordController,
                       labelText: 'Confirm Password *',
@@ -719,7 +708,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    // ID No.
                     UserTextfield(
                       controller: idNumberController,
                       labelText: 'ID No. *',
@@ -730,7 +718,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           : null,
                     ),
                     const SizedBox(height: 12),
-                    // Register As Dropdown
                     SizedBox(
                       width: double.infinity,
                       child: Padding(
@@ -937,19 +924,18 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                     const SizedBox(height: 12),
-                    // Validation Messages
                     AnimatedOpacity(
-                      opacity: _showValidations ? 1.0 : 0.0,
+                      opacity: _showValidations && !_isLoading ? 1.0 : 0.0,
                       duration: const Duration(milliseconds: 300),
                       child: _buildValidations(),
                     ),
                     const SizedBox(height: 16),
-                    // Register Button with Gradient
                     RegisterBtn(
-                      onPressed: registerUser,
+                      onPressed: _isLoading
+                          ? () {}
+                          : registerUser, // Use no-op function when loading
                     ),
                     const SizedBox(height: 12),
-                    // Login Link
                     Center(
                       child: RichText(
                         text: TextSpan(

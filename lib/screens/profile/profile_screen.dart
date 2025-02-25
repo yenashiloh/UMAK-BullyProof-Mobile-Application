@@ -201,8 +201,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           initialEmail: userEmail,
           initialContact: userContact,
           initialStudentNumber: userStudentNumber,
-          initialUserType: userType, // Pass userType
-          initialPosition: userPosition, // Pass userPosition
+          initialUserType: userType,
+          initialPosition: userPosition,
           onSave: (name, email, contact, studentNumber) async {
             await _updateProfile(name, email, contact, studentNumber);
           },
@@ -444,8 +444,11 @@ class PasswordSettingsScreen extends StatefulWidget {
   final String token;
   final String userId;
 
-  const PasswordSettingsScreen(
-      {super.key, required this.token, required this.userId});
+  const PasswordSettingsScreen({
+    super.key,
+    required this.token,
+    required this.userId,
+  });
 
   @override
   State<PasswordSettingsScreen> createState() => _PasswordSettingsScreenState();
@@ -487,9 +490,13 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
       return;
     }
 
-    if (newPasswordController.text.length < 8) {
+    // Regex for password: at least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
+    final passwordRegex = RegExp(
+        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$');
+    if (!passwordRegex.hasMatch(newPasswordController.text)) {
       _showModernSnackBar(
-          'Password must be at least 8 characters', Colors.orange);
+          'Password must be at least 8 characters with one uppercase, one lowercase, one number, and one special character (!@#\$%^&*)',
+          Colors.orange);
       return;
     }
 
@@ -782,8 +789,8 @@ class EditProfileModal extends StatefulWidget {
   final String initialEmail;
   final String initialContact;
   final String initialStudentNumber;
-  final String initialUserType; // New parameter
-  final String initialPosition; // New parameter
+  final String initialUserType;
+  final String initialPosition;
   final Function(String, String, String, String) onSave;
 
   const EditProfileModal({
@@ -792,8 +799,8 @@ class EditProfileModal extends StatefulWidget {
     required this.initialEmail,
     required this.initialContact,
     required this.initialStudentNumber,
-    required this.initialUserType, // Added
-    required this.initialPosition, // Added
+    required this.initialUserType,
+    required this.initialPosition,
     required this.onSave,
   });
 
@@ -806,7 +813,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
   late TextEditingController emailController;
   late TextEditingController contactController;
   late TextEditingController studentNumberController;
-  late TextEditingController positionController; // New controller
+  late TextEditingController positionController;
 
   @override
   void initState() {
@@ -816,8 +823,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
     contactController = TextEditingController(text: widget.initialContact);
     studentNumberController =
         TextEditingController(text: widget.initialStudentNumber);
-    positionController =
-        TextEditingController(text: widget.initialPosition); // Initialize
+    positionController = TextEditingController(text: widget.initialPosition);
   }
 
   @override
@@ -826,7 +832,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
     emailController.dispose();
     contactController.dispose();
     studentNumberController.dispose();
-    positionController.dispose(); // Dispose new controller
+    positionController.dispose();
     super.dispose();
   }
 
@@ -898,7 +904,6 @@ class _EditProfileModalState extends State<EditProfileModal> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine label based on userType
     final positionLabel = widget.initialUserType.toLowerCase() == 'student'
         ? 'Year Level'
         : 'Position';
@@ -958,7 +963,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
                   _buildTextField('ID Number', studentNumberController,
                       enabled: false),
                   _buildTextField(positionLabel, positionController,
-                      enabled: false), // New disabled field
+                      enabled: false),
                 ],
               ),
             ),
