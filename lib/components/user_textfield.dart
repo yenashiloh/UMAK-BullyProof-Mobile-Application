@@ -11,17 +11,18 @@ class UserTextfield extends StatelessWidget {
   final String? errorText;
   final FocusNode? focusNode;
 
-  const UserTextfield(
-      {super.key,
-      required this.controller,
-      required this.hintText,
-      required this.labelText,
-      required this.obscureText,
-      this.suffixIcon,
-      this.inputFormatters,
-      this.validator,
-      this.errorText,
-      this.focusNode});
+  const UserTextfield({
+    super.key,
+    required this.controller,
+    required this.hintText,
+    required this.labelText,
+    required this.obscureText,
+    this.suffixIcon,
+    this.inputFormatters,
+    this.validator,
+    this.errorText,
+    this.focusNode,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,13 +37,47 @@ class UserTextfield extends StatelessWidget {
             inputFormatters: inputFormatters,
             focusNode: focusNode,
             decoration: InputDecoration(
-              labelText: labelText,
-              floatingLabelBehavior: FloatingLabelBehavior.auto,
-              labelStyle: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Color.fromRGBO(21, 72, 137, 0.7),
+              label: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: labelText.replaceAll(' *', ''),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Color.fromRGBO(21, 72, 137, 0.7),
+                      ),
+                    ),
+                    if (labelText.contains('*')) ...[
+                      WidgetSpan(
+                        child: Tooltip(
+                          message: 'Required field',
+                          child: Transform.translate(
+                            offset: const Offset(
+                                0, -2),
+                            child: const Text(
+                              ' *',
+                              style: TextStyle(
+                                color: Colors.red,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.redAccent,
+                                    offset: Offset(0, 0),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(
@@ -59,7 +94,7 @@ class UserTextfield extends StatelessWidget {
               filled: true,
               hintText: hintText,
               hintStyle: TextStyle(
-                color: Colors.grey.withOpacity(0.5),
+                color: Colors.grey[500],
               ),
               contentPadding: const EdgeInsets.fromLTRB(30.0, 15.0, 30.0, 15.0),
               suffixIcon: suffixIcon,
@@ -68,8 +103,7 @@ class UserTextfield extends StatelessWidget {
           if (errorText != null) ...[
             const SizedBox(height: 5),
             Padding(
-              padding: const EdgeInsets.only(
-                  left: 30.0),
+              padding: const EdgeInsets.only(left: 30.0),
               child: Text(
                 errorText!,
                 style: const TextStyle(color: Colors.red, fontSize: 12),

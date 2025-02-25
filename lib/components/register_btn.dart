@@ -10,10 +10,14 @@ class RegisterBtn extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.all(15),
-        margin: const EdgeInsets.symmetric(horizontal: 25),
+        padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 30.0),
+        margin: const EdgeInsets.symmetric(horizontal: 25.0),
         decoration: BoxDecoration(
-          color: const Color.fromRGBO(22, 71, 137, 1),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(10),
         ),
         child: const Center(
@@ -21,7 +25,7 @@ class RegisterBtn extends StatelessWidget {
             "Create Account",
             style: TextStyle(
               color: Colors.white,
-              fontSize: 22,
+              fontSize: 18,
             ),
           ),
         ),

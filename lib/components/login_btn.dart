@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 class LoginBtn extends StatelessWidget {
   final VoidCallback onPressed;
+  final String text;
 
-  const LoginBtn({super.key, required this.onPressed});
+  const LoginBtn(
+      {super.key,
+      required this.onPressed,
+      this.text = "Login"});
 
   @override
   Widget build(BuildContext context) {
@@ -16,10 +20,10 @@ class LoginBtn extends StatelessWidget {
           color: const Color.fromRGBO(22, 71, 137, 1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            "Login",
-            style: TextStyle(
+            text,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 22,
             ),

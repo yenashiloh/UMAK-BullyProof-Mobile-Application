@@ -1,105 +1,61 @@
 import 'dart:convert';
-
 import 'package:bully_proof_umak/components/login_btn.dart';
 import 'package:bully_proof_umak/components/user_textfield.dart';
 import 'package:bully_proof_umak/config.dart';
-import 'package:bully_proof_umak/main.dart';
-import 'package:bully_proof_umak/pages/registration_page.dart';
-import 'package:bully_proof_umak/pages/forgot_password_page.dart'; // New import
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _LoginPageState createState() => _LoginPageState();
+  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final emailController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool _obscurePassword = true;
   bool isEmailEmpty = false;
-  bool isPasswordEmpty = false;
-  late SharedPreferences prefs;
+  bool isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    initSharedPref();
-  }
+  Future<void> _resetPassword() async {
+    if (emailController.text.isEmpty) {
+      _errorMessage(context, "Please enter your email address");
+      return;
+    }
 
-  void initSharedPref() async {
-    prefs = await SharedPreferences.getInstance();
-  }
-
-  void _togglePasswordVisibility() {
     setState(() {
-      _obscurePassword = !_obscurePassword;
-    });
-  }
-
-  void _onCreateAccountPressed() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const RegisterPage()),
-    );
-  }
-
-  void loginUser() async {
-    setState(() {
-      isEmailEmpty = emailController.text.isEmpty;
-      isPasswordEmpty = passwordController.text.isEmpty;
+      isLoading = true;
     });
 
-    if (!isEmailEmpty && !isPasswordEmpty) {
-      var regBody = {
-        "email": emailController.text,
-        "password": passwordController.text,
-      };
-
-      var response = await http.post(
-        Uri.parse(login),
+    const forgotPasswordUrl = '${url}users/forgot-password';
+    try {
+      final response = await http.post(
+        Uri.parse(forgotPasswordUrl),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode(regBody),
+        body: jsonEncode({"email": emailController.text}),
       );
 
-      var jsonResponse = jsonDecode(response.body);
+      final jsonResponse = jsonDecode(response.body);
 
-      if (jsonResponse['status']) {
-        var myToken = jsonResponse['token'];
-        prefs.setString('token', myToken);
-
-        Map<String, dynamic> decodedToken = JwtDecoder.decode(myToken);
-        print('Decoded Token: $decodedToken');
-
-        _successMessage(context);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(
-              token: myToken,
-            ),
-          ),
-        );
+      if (response.statusCode == 200 && jsonResponse['status']) {
+        _successMessage(context,
+            "Password reset link sent to your email. Check your inbox.");
+        Navigator.pop(context);
       } else {
-        _errorMessage(context, jsonResponse['message'] ?? "Login Failed");
+        _errorMessage(
+            context, jsonResponse['message'] ?? "Failed to send reset link");
       }
-    } else {
+    } catch (e) {
+      _errorMessage(context, "An error occurred: $e");
+    } finally {
       setState(() {
-        isEmailEmpty = emailController.text.isEmpty;
-        isPasswordEmpty = passwordController.text.isEmpty;
+        isLoading = false;
       });
     }
   }
 
-  void _successMessage(BuildContext context,
-      [String message = 'Login successful!']) {
+  void _successMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Container(
@@ -215,7 +171,7 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Login Failed',
+                      'Error',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
@@ -252,35 +208,45 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue.shade800,
+        title: const Text(
+          'Forgot Password',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
           child: Center(
             child: Column(
               children: [
                 const SizedBox(height: 50),
-                // logo
-                Image.asset(
-                  'assets/user_logo.png',
-                  width: 130,
-                ),
-                const SizedBox(height: 50),
                 const Text(
-                  "Login here",
+                  "Reset Your Password",
                   style: TextStyle(
                     color: Color(0xFF1E3A8A),
                     fontSize: 25,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 5),
+                const SizedBox(height: 10),
                 const Text(
-                  "Please login to continue using our app",
+                  "Enter your email address to receive a password reset link",
                   style: TextStyle(
                     fontSize: 18,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                // email
                 UserTextfield(
                   controller: emailController,
                   labelText: 'Email',
@@ -288,64 +254,56 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: false,
                   errorText: isEmailEmpty ? "Field cannot be empty" : null,
                 ),
-                const SizedBox(height: 20),
-                // password
-                UserTextfield(
-                  controller: passwordController,
-                  labelText: 'Password',
-                  hintText: '•••••••••••••',
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: Colors.grey,
-                    ),
-                    onPressed: _togglePasswordVisibility,
-                  ),
-                  errorText: isPasswordEmpty ? "Field cannot be empty" : null,
-                ),
-                const SizedBox(height: 20),
-                LoginBtn(
-                  onPressed: loginUser,
-                  text: 'Login',
-                ),
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ForgotPasswordPage()),
-                    );
-                  }, // Navigate to ForgotPasswordPage
-                  child: const Text(
-                    "Forgot password?",
-                    style: TextStyle(color: Color(0xFF7A7A7A), fontSize: 16),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      const TextSpan(
-                          text: "Don't you have an account? ",
-                          style: TextStyle(
-                            color: Color(0xFF7A7A7A),
-                            fontSize: 15,
-                          )),
-                      TextSpan(
-                        text: "Create account",
-                        style: const TextStyle(
-                          color: Color(0xFF1E3A8A),
+                const SizedBox(height: 40),
+                isLoading
+                    ? Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.blue.shade600,
+                              Colors.blue.shade400
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = _onCreateAccountPressed,
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Text(
+                              'Sending...',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : LoginBtn(
+                        onPressed: _resetPassword,
+                        text: 'Send Reset Link',
                       ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

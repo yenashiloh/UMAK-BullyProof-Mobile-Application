@@ -1,4 +1,3 @@
-// lib/widgets/profile_avatar.dart
 import 'package:flutter/material.dart';
 
 class ProfileAvatar extends StatelessWidget {
@@ -15,12 +14,12 @@ class ProfileAvatar extends StatelessWidget {
 
   Color _getAvatarColor(String name) {
     final List<Color> colors = [
-      const Color(0xFFE67C73), // Red
-      const Color(0xFF8E24AA), // Purple
-      const Color(0xFF039BE5), // Blue
-      const Color(0xFF0B8043), // Green
-      const Color(0xFFF6BF26), // Yellow
-      const Color(0xFFF4511E), // Orange
+      const Color(0xFFE67C73),
+      const Color(0xFF8E24AA),
+      const Color(0xFF039BE5),
+      const Color(0xFF0B8043),
+      const Color(0xFFF6BF26),
+      const Color(0xFFF4511E),
     ];
 
     final int hashCode = name.toUpperCase().codeUnits.fold(0, (a, b) => a + b);

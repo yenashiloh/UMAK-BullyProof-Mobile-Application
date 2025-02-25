@@ -45,11 +45,13 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   late String email;
+  late String fullName;
   late String userId;
   late String token;
   int _currentIndex = 0;
   List<Map<String, dynamic>> _userReports = [];
   List<Map<String, dynamic>> _userNotif = [];
+  Map<String, dynamic>? _userData;
   bool _isLoading = false;
 
   @override
@@ -58,8 +60,45 @@ class HomePageState extends State<HomePage> {
 
     Map<String, dynamic> jwtDecodedToken = JwtDecoder.decode(widget.token);
     email = jwtDecodedToken['email'] ?? "Unknown";
+    fullName = jwtDecodedToken['fullname'] ?? "Unknown";
     userId = jwtDecodedToken['_id'] ?? "";
     token = widget.token;
+
+    _fetchUserData(userId);
+  }
+
+  Future<void> _fetchUserData(String userId) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final userUrl = '${url}users/$userId';
+    try {
+      final response = await http.get(Uri.parse(userUrl), headers: {
+        'Authorization': 'Bearer $token',
+      });
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        if (jsonResponse['status']) {
+          setState(() {
+            _userData = jsonResponse['user'];
+            _isLoading = false;
+          });
+          print('User Data Fetched: $_userData');
+        } else {
+          throw Exception(
+              'Failed to fetch user data: ${jsonResponse['message']}');
+        }
+      } else {
+        throw Exception('Failed to fetch user data: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error fetching user data: $e');
+    }
   }
 
   Future<void> _fetchUserReportData(String userId) async {
@@ -302,7 +341,7 @@ class HomePageState extends State<HomePage> {
             onSeekHelpButtonPressed: () {
               _onPageSelected(2);
             },
-            email: email,
+            fullName: fullName,
           ),
           // In HomePage's build method, update the ReportScreen creation:
           ReportScreen(
@@ -329,7 +368,12 @@ class HomePageState extends State<HomePage> {
             onDelete: _deleteNotification,
             context: context,
           ),
-          const ProfileScreen(),
+          ProfileScreen(
+            userData: _userData,
+            isLoading: _isLoading,
+            token: widget.token,
+            userId: userId,
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -418,6 +462,9 @@ class HomePageState extends State<HomePage> {
         break;
       case 3:
         _fetchUserNotificationData(userId);
+        break;
+      case 4:
+        _fetchUserData(userId);
         break;
       default:
         // Optionally handle other cases or do nothing

@@ -37,7 +37,8 @@ dependencies:
   shared_preferences:
   jwt_decoder:
   fluttertoast: ^8.2.8
-  file_picker: ^6.1.0  
+  file_picker: ^6.1.0
+  google_fonts: ^6.2.1
 
 
 

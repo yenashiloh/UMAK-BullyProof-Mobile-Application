@@ -1,45 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; // Add this package for modern typography
 
 class HomeScreen extends StatelessWidget {
   final VoidCallback onReportButtonPressed;
   final VoidCallback onSeekHelpButtonPressed;
-  final String email;
+  final String fullName;
 
   const HomeScreen({
     super.key,
     required this.onReportButtonPressed,
     required this.onSeekHelpButtonPressed,
-    required this.email,
+    required this.fullName,
   });
+
+  String _getFirstName(String fullName) {
+    List<String> nameParts = fullName.trim().split(' ');
+    return nameParts.isNotEmpty ? nameParts[0] : fullName;
+  }
 
   @override
   Widget build(BuildContext context) {
+    String firstName = _getFirstName(fullName);
     return Padding(
-      padding: const EdgeInsets.all(9.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
       child: ListView(
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 12.0, bottom: 10.0),
-            child: Text.rich(
-              TextSpan(
-                text: "Welcome, ", // Regular text
-                style:
-                    const TextStyle(fontSize: 20), // Style for the regular text
-                children: <TextSpan>[
-                  TextSpan(
-                    text: email, // Bold text
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold), // Style for the bold text
-                  ),
-                ],
+          // Welcome Text with modern typography
+          Text.rich(
+            TextSpan(
+              text: "Welcome, ",
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                color: Colors.black87,
               ),
+              children: <TextSpan>[
+                TextSpan(
+                  text: firstName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1A4594),
+                  ),
+                ),
+              ],
             ),
           ),
-          _buildCard(
+          const SizedBox(height: 20),
+          // Modern Cards
+          _buildModernCard(
             context: context,
             icon: Icons.phone_iphone,
-            title: 'What is cyberbullying?',
+            title: 'What is Cyberbullying?',
             description:
                 'Cyberbullying involves using technology to harass, intimidate, embarrass, or target someone. This includes online threats, hostile or rude texts, tweets, posts, or messages.',
             buttonText: 'Learn More',
@@ -85,8 +96,8 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          _buildCard(
+          const SizedBox(height: 20),
+          _buildModernCard(
             context: context,
             icon: Icons.description_outlined,
             title: 'Report Cyberbullying',
@@ -95,22 +106,22 @@ class HomeScreen extends StatelessWidget {
             buttonText: 'Report Now',
             onButtonPressed: onReportButtonPressed,
           ),
-          const SizedBox(height: 16),
-          _buildCard(
-            context: context,
-            icon: Icons.psychology_outlined,
-            title: 'Counselling Support',
-            description:
-                'If you or someone you know is experiencing the distress of cyberbullying, you are not alone. Our dedicated team of trained counselors is here to provide a safe, confidential space for you to share your experiences and feelings.',
-            buttonText: 'Seek Help',
-            onButtonPressed: () {},
-          ),
+          // const SizedBox(height: 20),
+          // _buildModernCard(
+          //   context: context,
+          //   icon: Icons.psychology_outlined,
+          //   title: 'Counselling Support',
+          //   description:
+          //       'If you or someone you know is experiencing the distress of cyberbullying, you are not alone. Our dedicated team of trained counselors is here to provide a safe, confidential space for you to share your experiences and feelings.',
+          //   buttonText: 'Seek Help',
+          //   onButtonPressed: onSeekHelpButtonPressed,
+          // ),
         ],
       ),
     );
   }
 
-  Widget _buildCard({
+  Widget _buildModernCard({
     required BuildContext context,
     required IconData icon,
     required String title,
@@ -119,27 +130,27 @@ class HomeScreen extends StatelessWidget {
     required VoidCallback onButtonPressed,
   }) {
     return Card(
+      elevation: 6,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(12),
       ),
-      elevation: 4,
-      child: IntrinsicHeight(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF1A4594).withOpacity(0.9),
+              const Color.fromARGB(255, 0, 23, 65),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 80,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF1A4594), Color.fromARGB(255, 0, 23, 65)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(5),
-                  bottomLeft: Radius.circular(5),
-                ),
-              ),
+              padding: const EdgeInsets.all(16),
               child: Icon(
                 icon,
                 size: 40,
@@ -154,35 +165,43 @@ class HomeScreen extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 18,
+                      style: GoogleFonts.poppins(
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       description,
-                      style: const TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: Colors.white70,
                       ),
                     ),
                     const SizedBox(height: 16),
                     Align(
                       alignment: Alignment.bottomRight,
-                      child: TextButton(
+                      child: ElevatedButton(
                         onPressed: onButtonPressed,
-                        style: TextButton.styleFrom(
+                        style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFFB731),
                           foregroundColor: const Color(0xFF1A4594),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          textStyle: const TextStyle(
-                            fontSize: 12,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
                           ),
                         ),
-                        child: Text(buttonText),
+                        child: Text(
+                          buttonText,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -204,18 +223,23 @@ class HomeScreen extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
           ),
-          contentPadding: const EdgeInsets.all(16.0),
+          contentPadding: const EdgeInsets.all(24.0),
+          backgroundColor: Colors.white,
           content: Padding(
             padding: const EdgeInsets.only(top: 16.0),
             child: content,
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text(
+              child: Text(
                 'Close',
-                style: TextStyle(color: Color(0xFF1A4594)),
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF1A4594),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
