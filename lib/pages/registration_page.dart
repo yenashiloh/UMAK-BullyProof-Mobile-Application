@@ -558,415 +558,420 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.grey[100]!,
-              Colors.white,
-            ],
-          ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
         ),
         child: SafeArea(
-          child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 400),
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+          child: LayoutBuilder(builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: TweenAnimationBuilder(
-                        tween: Tween<double>(begin: 0, end: 1),
-                        duration: const Duration(milliseconds: 800),
-                        builder: (context, value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: Image.asset(
-                              'assets/user_logo.png',
-                              width: 90,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      // boxShadow: [
+                      //   BoxShadow(
+                      //     color: Colors.black.withOpacity(0.05),
+                      //     blurRadius: 15,
+                      //     offset: const Offset(0, 5),
+                      //   ),
+                      // ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: TweenAnimationBuilder(
+                            tween: Tween<double>(begin: 0, end: 1),
+                            duration: const Duration(milliseconds: 800),
+                            builder: (context, value, child) {
+                              return Transform.scale(
+                                scale: value,
+                                child: Image.asset(
+                                  'assets/user_logo.png',
+                                  width: 90,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds),
+                            child: const Text(
+                              "Create Account",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ).createShader(bounds),
-                        child: const Text(
-                          "Create Account",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Center(
-                      child: Text(
-                        "Please fill the details and create account",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    UserTextfield(
-                      controller: fullnameController,
-                      labelText: 'Full Name *',
-                      hintText: 'Enter your full name',
-                      obscureText: false,
-                      errorText: _showValidations && !isFullnameValid
-                          ? "Field cannot be empty"
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    UserTextfield(
-                      controller: emailController,
-                      labelText: 'Email *',
-                      hintText: 'your_umakemail@umak.edu.ph',
-                      obscureText: false,
-                      errorText: _showValidations && !isEmailValid
-                          ? "Valid UMak email required"
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    UserTextfield(
-                      controller: contactController,
-                      labelText: 'Contact No. *',
-                      hintText: '+09',
-                      obscureText: false,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(11),
-                      ],
-                      errorText: _showValidations && !isContactValid
-                          ? "Must be 11 digits"
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    UserTextfield(
-                      controller: passwordController,
-                      labelText: 'Password *',
-                      hintText: '•••••••••••••',
-                      obscureText: _obscurePassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Colors.grey,
-                        ),
-                        onPressed: _togglePasswordVisibility,
-                      ),
-                      errorText: _showValidations && !isPasswordValid
-                          ? "Check requirements"
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    UserTextfield(
-                      controller: cpasswordController,
-                      labelText: 'Confirm Password *',
-                      hintText: '•••••••••••••',
-                      obscureText: _obscureCPassword,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureCPassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Colors.grey,
-                        ),
-                        onPressed: _toggleCPasswordVisibility,
-                      ),
-                      errorText: _showValidations && !doPasswordsMatch
-                          ? "Passwords do not match"
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    UserTextfield(
-                      controller: idNumberController,
-                      labelText: 'ID No. *',
-                      hintText: 'Enter your UMak ID number',
-                      obscureText: false,
-                      errorText: _showValidations && !isIdnumberValid
-                          ? "Field cannot be empty"
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedRole,
-                          hint: Text(
-                            'Register As',
-                            style: TextStyle(color: Colors.grey[500]),
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Text(
+                            "Please fill the details and create account",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          items: _roles.map((String role) {
-                            return DropdownMenuItem<String>(
-                              value: role,
-                              child: Text(role),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedRole = newValue;
-                              _selectedProgramOrPosition = null;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            label: RichText(
-                              text: TextSpan(
-                                children: [
-                                  const TextSpan(
-                                    text: 'Register As',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20,
-                                      color: Color.fromRGBO(21, 72, 137, 0.7),
-                                    ),
-                                  ),
-                                  WidgetSpan(
-                                    child: Tooltip(
-                                      message: 'Required field',
-                                      child: Transform.translate(
-                                        offset: const Offset(0, -2),
-                                        child: const Text(
-                                          ' *',
-                                          style: TextStyle(
-                                            color: Colors.red,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            shadows: [
-                                              Shadow(
-                                                color: Colors.redAccent,
-                                                offset: Offset(0, 0),
-                                                blurRadius: 2,
-                                              ),
-                                            ],
-                                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        UserTextfield(
+                          controller: fullnameController,
+                          labelText: 'Full Name *',
+                          hintText: 'Enter your full name',
+                          obscureText: false,
+                          errorText: _showValidations && !isFullnameValid
+                              ? "Field cannot be empty"
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        UserTextfield(
+                          controller: emailController,
+                          labelText: 'Email *',
+                          hintText: 'your_umakemail@umak.edu.ph',
+                          obscureText: false,
+                          errorText: _showValidations && !isEmailValid
+                              ? "Valid UMak email required"
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        UserTextfield(
+                          controller: contactController,
+                          labelText: 'Contact No. *',
+                          hintText: '+09',
+                          obscureText: false,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(11),
+                          ],
+                          errorText: _showValidations && !isContactValid
+                              ? "Must be 11 digits"
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        UserTextfield(
+                          controller: passwordController,
+                          labelText: 'Password *',
+                          hintText: '•••••••••••••',
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.grey,
+                            ),
+                            onPressed: _togglePasswordVisibility,
+                          ),
+                          errorText: _showValidations && !isPasswordValid
+                              ? "Check requirements"
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        UserTextfield(
+                          controller: cpasswordController,
+                          labelText: 'Confirm Password *',
+                          hintText: '•••••••••••••',
+                          obscureText: _obscureCPassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureCPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.grey,
+                            ),
+                            onPressed: _toggleCPasswordVisibility,
+                          ),
+                          errorText: _showValidations && !doPasswordsMatch
+                              ? "Passwords do not match"
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        UserTextfield(
+                          controller: idNumberController,
+                          labelText: 'ID No. *',
+                          hintText: 'Enter your UMak ID number',
+                          obscureText: false,
+                          errorText: _showValidations && !isIdnumberValid
+                              ? "Field cannot be empty"
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 25.0),
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedRole,
+                              hint: Text(
+                                'Register As',
+                                style: TextStyle(color: Colors.grey[500]),
+                              ),
+                              items: _roles.map((String role) {
+                                return DropdownMenuItem<String>(
+                                  value: role,
+                                  child: Text(role),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedRole = newValue;
+                                  _selectedProgramOrPosition = null;
+                                });
+                              },
+                              decoration: InputDecoration(
+                                label: RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      const TextSpan(
+                                        text: 'Register As',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                          color:
+                                              Color.fromRGBO(21, 72, 137, 0.7),
                                         ),
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            floatingLabelBehavior: FloatingLabelBehavior.auto,
-                            labelStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                              color: Color.fromRGBO(21, 72, 137, 0.7),
-                            ),
-                            errorText: _showValidations && !isRoleSelected
-                                ? "Selection required"
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: Color.fromRGBO(21, 72, 137, 1),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: Color.fromRGBO(21, 72, 137, 1),
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(
-                                color: Color.fromRGBO(21, 72, 137, 1),
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.fromLTRB(
-                                30.0, 15.0, 30.0, 15.0),
-                          ),
-                          style: const TextStyle(color: Colors.black87),
-                          isExpanded: true,
-                          dropdownColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    if (_selectedRole != null)
-                      SizedBox(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedProgramOrPosition,
-                            hint: Text(
-                              _selectedRole == 'Employee'
-                                  ? 'Position'
-                                  : 'Program/Year Level',
-                              style: TextStyle(color: Colors.grey[500]),
-                            ),
-                            items: (_selectedRole == 'Employee'
-                                    ? _employeePositions
-                                    : _studentYearLevels)
-                                .map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                _selectedProgramOrPosition = newValue;
-                              });
-                            },
-                            decoration: InputDecoration(
-                              label: RichText(
-                                text: TextSpan(
-                                  children: [
-                                    TextSpan(
-                                      text: _selectedRole == 'Employee'
-                                          ? 'Position'
-                                          : 'Program/Year Level',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20,
-                                        color: Color.fromRGBO(21, 72, 137, 0.7),
-                                      ),
-                                    ),
-                                    WidgetSpan(
-                                      child: Tooltip(
-                                        message: 'Required field',
-                                        child: Transform.translate(
-                                          offset: const Offset(0, -2),
-                                          child: const Text(
-                                            ' *',
-                                            style: TextStyle(
-                                              color: Colors.red,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.bold,
-                                              shadows: [
-                                                Shadow(
-                                                  color: Colors.redAccent,
-                                                  offset: Offset(0, 0),
-                                                  blurRadius: 2,
-                                                ),
-                                              ],
+                                      WidgetSpan(
+                                        child: Tooltip(
+                                          message: 'Required field',
+                                          child: Transform.translate(
+                                            offset: const Offset(0, -2),
+                                            child: const Text(
+                                              ' *',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                shadows: [
+                                                  Shadow(
+                                                    color: Colors.redAccent,
+                                                    offset: Offset(0, 0),
+                                                    blurRadius: 2,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              floatingLabelBehavior: FloatingLabelBehavior.auto,
-                              labelStyle: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 20,
-                                color: Color.fromRGBO(21, 72, 137, 0.7),
-                              ),
-                              errorText: _showValidations &&
-                                      !isProgramOrPositionSelected
-                                  ? "Selection required"
-                                  : null,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Color.fromRGBO(21, 72, 137, 1),
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.auto,
+                                labelStyle: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
+                                  color: Color.fromRGBO(21, 72, 137, 0.7),
                                 ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Color.fromRGBO(21, 72, 137, 1),
+                                errorText: _showValidations && !isRoleSelected
+                                    ? "Selection required"
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                    color: Color.fromRGBO(21, 72, 137, 1),
+                                  ),
                                 ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                                borderSide: const BorderSide(
-                                  color: Color.fromRGBO(21, 72, 137, 1),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                    color: Color.fromRGBO(21, 72, 137, 1),
+                                  ),
                                 ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                    color: Color.fromRGBO(21, 72, 137, 1),
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: const EdgeInsets.fromLTRB(
+                                    30.0, 15.0, 30.0, 15.0),
                               ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.fromLTRB(
-                                  30.0, 15.0, 30.0, 15.0),
+                              style: const TextStyle(color: Colors.black87),
+                              isExpanded: true,
+                              dropdownColor: Colors.white,
                             ),
-                            style: const TextStyle(color: Colors.black87),
-                            isExpanded: true,
-                            dropdownColor: Colors.white,
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 12),
-                    AnimatedOpacity(
-                      opacity: _showValidations && !_isLoading ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 300),
-                      child: _buildValidations(),
-                    ),
-                    const SizedBox(height: 16),
-                    RegisterBtn(
-                      onPressed: _isLoading
-                          ? () {}
-                          : registerUser, // Use no-op function when loading
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "Already have an account? ",
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 14,
+                        const SizedBox(height: 12),
+                        if (_selectedRole != null)
+                          SizedBox(
+                            width: double.infinity,
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 25.0),
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedProgramOrPosition,
+                                hint: Text(
+                                  _selectedRole == 'Employee'
+                                      ? 'Position'
+                                      : 'Program/Year Level',
+                                  style: TextStyle(color: Colors.grey[500]),
+                                ),
+                                items: (_selectedRole == 'Employee'
+                                        ? _employeePositions
+                                        : _studentYearLevels)
+                                    .map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedProgramOrPosition = newValue;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  label: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: _selectedRole == 'Employee'
+                                              ? 'Position'
+                                              : 'Program/Year Level',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                            color: Color.fromRGBO(
+                                                21, 72, 137, 0.7),
+                                          ),
+                                        ),
+                                        WidgetSpan(
+                                          child: Tooltip(
+                                            message: 'Required field',
+                                            child: Transform.translate(
+                                              offset: const Offset(0, -2),
+                                              child: const Text(
+                                                ' *',
+                                                style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  shadows: [
+                                                    Shadow(
+                                                      color: Colors.redAccent,
+                                                      offset: Offset(0, 0),
+                                                      blurRadius: 2,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  floatingLabelBehavior:
+                                      FloatingLabelBehavior.auto,
+                                  labelStyle: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                    color: Color.fromRGBO(21, 72, 137, 0.7),
+                                  ),
+                                  errorText: _showValidations &&
+                                          !isProgramOrPositionSelected
+                                      ? "Selection required"
+                                      : null,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: Color.fromRGBO(21, 72, 137, 1),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: Color.fromRGBO(21, 72, 137, 1),
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: const BorderSide(
+                                      color: Color.fromRGBO(21, 72, 137, 1),
+                                    ),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: const EdgeInsets.fromLTRB(
+                                      30.0, 15.0, 30.0, 15.0),
+                                ),
+                                style: const TextStyle(color: Colors.black87),
+                                isExpanded: true,
+                                dropdownColor: Colors.white,
                               ),
                             ),
-                            TextSpan(
-                              text: "Login",
-                              style: const TextStyle(
-                                color: Color(0xFF1E3A8A),
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = _onLoginPressed,
-                            ),
-                          ],
+                          ),
+                        const SizedBox(height: 12),
+                        AnimatedOpacity(
+                          opacity: _showValidations && !_isLoading ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 300),
+                          child: _buildValidations(),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        RegisterBtn(
+                          onPressed: _isLoading
+                              ? () {}
+                              : registerUser, // Use no-op function when loading
+                        ),
+                        const SizedBox(height: 12),
+                        Center(
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: "Already have an account? ",
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: "Login",
+                                  style: const TextStyle(
+                                    color: Color(0xFF1E3A8A),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = _onLoginPressed,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
                     ),
-                    const SizedBox(height: 24),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ),
       ),
     );

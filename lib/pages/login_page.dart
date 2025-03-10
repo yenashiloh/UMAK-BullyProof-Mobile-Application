@@ -252,101 +252,114 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              children: [
-                const SizedBox(height: 50),
-                // logo
-                Image.asset(
-                  'assets/user_logo.png',
-                  width: 130,
-                ),
-                const SizedBox(height: 50),
-                const Text(
-                  "Login here",
-                  style: TextStyle(
-                    color: Color(0xFF1E3A8A),
-                    fontSize: 25,
-                    fontWeight: FontWeight.w900,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Center(
+              child: Column(
+                children: [
+                  const SizedBox(height: 50),
+                  // logo
+                  Image.asset(
+                    'assets/user_logo.png',
+                    width: 130,
                   ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  "Please login to continue using our app",
-                  style: TextStyle(
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                // email
-                UserTextfield(
-                  controller: emailController,
-                  labelText: 'Email',
-                  hintText: 'your_email@umak.edu.ph',
-                  obscureText: false,
-                  errorText: isEmailEmpty ? "Field cannot be empty" : null,
-                ),
-                const SizedBox(height: 20),
-                // password
-                UserTextfield(
-                  controller: passwordController,
-                  labelText: 'Password',
-                  hintText: '•••••••••••••',
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: Colors.grey,
-                    ),
-                    onPressed: _togglePasswordVisibility,
-                  ),
-                  errorText: isPasswordEmpty ? "Field cannot be empty" : null,
-                ),
-                const SizedBox(height: 20),
-                LoginBtn(
-                  onPressed: loginUser,
-                  text: 'Login',
-                ),
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ForgotPasswordPage()),
-                    );
-                  }, // Navigate to ForgotPasswordPage
-                  child: const Text(
-                    "Forgot password?",
-                    style: TextStyle(color: Color(0xFF7A7A7A), fontSize: 16),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      const TextSpan(
-                          text: "Don't you have an account? ",
-                          style: TextStyle(
-                            color: Color(0xFF7A7A7A),
-                            fontSize: 15,
-                          )),
-                      TextSpan(
-                        text: "Create account",
-                        style: const TextStyle(
-                          color: Color(0xFF1E3A8A),
+                  const SizedBox(height: 50),
+                  Center(
+                          child: ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ).createShader(bounds),
+                            child: const Text(
+                              "BullyProof",
+                              style: TextStyle(
+                                fontSize: 25,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = _onCreateAccountPressed,
-                      ),
-                    ],
+                  const SizedBox(height: 5),
+                  const Text(
+                    "Please login to continue using our app",
+                    style: TextStyle(
+                      fontSize: 18,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 40),
+                  // email
+                  UserTextfield(
+                    controller: emailController,
+                    labelText: 'Email',
+                    hintText: 'your_email@umak.edu.ph',
+                    obscureText: false,
+                    errorText: isEmailEmpty ? "Field cannot be empty" : null,
+                  ),
+                  const SizedBox(height: 20),
+                  // password
+                  UserTextfield(
+                    controller: passwordController,
+                    labelText: 'Password',
+                    hintText: '•••••••••••••',
+                    obscureText: _obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                        color: Colors.grey,
+                      ),
+                      onPressed: _togglePasswordVisibility,
+                    ),
+                    errorText: isPasswordEmpty ? "Field cannot be empty" : null,
+                  ),
+                  const SizedBox(height: 20),
+                  LoginBtn(
+                    onPressed: loginUser,
+                    text: 'Login',
+                  ),
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ForgotPasswordPage()),
+                      );
+                    }, // Navigate to ForgotPasswordPage
+                    child: const Text(
+                      "Forgot password?",
+                      style: TextStyle(color: Color(0xFF7A7A7A), fontSize: 16),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        const TextSpan(
+                            text: "Don't have an account? ",
+                            style: TextStyle(
+                              color: Color(0xFF7A7A7A),
+                              fontSize: 15,
+                            )),
+                        TextSpan(
+                          text: "Create account",
+                          style: const TextStyle(
+                            color: Color(0xFF1E3A8A),
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = _onCreateAccountPressed,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

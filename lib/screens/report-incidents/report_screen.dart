@@ -87,7 +87,7 @@ class _ReportScreenState extends State<ReportScreen> {
     'Happy Slapping',
     'Catfishing',
     'Meme Bullying',
-    'Disinformation Campaings',
+    'Disinformation Campaigns',
     'Dissing',
     'Cookie Stuffing'
   ];
@@ -167,7 +167,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> _processImages() async {
-    showLoadingDialog(context);
+    showLoadingDialog(context, message: 'Converting image to text...');
 
     String combinedText = "";
     for (var file in _selectedImages) {
@@ -224,6 +224,9 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   void submitReport() async {
+    // Show loading dialog before starting the submission
+    showLoadingDialog(context, message: 'Submitting report...');
+
     if (otherPlatformController.text.isNotEmpty) {
       selectedPlatforms.add(otherPlatformController.text);
     }
@@ -262,7 +265,7 @@ class _ReportScreenState extends State<ReportScreen> {
       // "hasWitness": _getValueOrNA(_hasWitnesses),
       // "witnessInfo": _getValueOrNA(_witnessInfo.text),
       "incidentDetails": getValueOrNA(incidentDetailsController.text),
-      "incidentEvidence": getValueOrNA(base64Images),
+      "incidentEvidence": base64Images,
       "perpetratorName": getValueOrNA(_perpetratorName.text),
       "perpetratorRole": getValueOrNA(_perpetratorRole),
       "perpetratorGradeYearLevel": getValueOrNA(_perpetratorGradeYearLevel),
@@ -299,6 +302,9 @@ class _ReportScreenState extends State<ReportScreen> {
     print('Response body: ${response.body}');
 
     var jsonResponse = jsonDecode(response.body);
+
+    // Hide loading dialog after response is received
+    hideLoadingDialog(context);
 
     if (jsonResponse['status']) {
       setState(() {
@@ -910,14 +916,14 @@ class _ReportScreenState extends State<ReportScreen> {
                         text: 'I have read and agree to the\n',
                         style: TextStyle(
                           fontSize:
-                              16, // Slightly larger for better readability
+                              12, // Slightly larger for better readability
                           color: Colors.black87,
                         ),
                         children: [
                           TextSpan(
                             text: 'Terms and Conditions',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 12,
                               color: Colors.blue,
                               decoration: TextDecoration.underline,
                             ),
@@ -925,7 +931,7 @@ class _ReportScreenState extends State<ReportScreen> {
                           TextSpan(
                             text: ' and Data Privacy Statement.',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 12,
                               color: Colors.black87,
                             ),
                           ),
@@ -2444,7 +2450,8 @@ class _ReportScreenState extends State<ReportScreen> {
     });
   }
 
-  void showLoadingDialog(BuildContext context) {
+  void showLoadingDialog(BuildContext context,
+      {String message = 'Submitting report...'}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -2466,17 +2473,17 @@ class _ReportScreenState extends State<ReportScreen> {
               ],
             ),
             padding: const EdgeInsets.all(24),
-            child: const Column(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(
+                const CircularProgressIndicator(
                   strokeWidth: 4,
                   valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1A4594)),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
-                  'Converting image to text...',
-                  style: TextStyle(
+                  message,
+                  style: const TextStyle(
                     color: Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,

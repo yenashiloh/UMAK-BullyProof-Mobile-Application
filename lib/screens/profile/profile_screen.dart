@@ -5,6 +5,7 @@ import 'package:bully_proof_umak/components/profile_avatar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:bully_proof_umak/config.dart';
+import 'package:flutter/services.dart';
 
 class ProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -196,16 +197,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (context) => EditProfileModal(
-          initialName: userName,
-          initialEmail: userEmail,
-          initialContact: userContact,
-          initialStudentNumber: userStudentNumber,
-          initialUserType: userType,
-          initialPosition: userPosition,
-          onSave: (name, email, contact, studentNumber) async {
-            await _updateProfile(name, email, contact, studentNumber);
-          },
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 0.8,
+          minChildSize: 0.8,
+          maxChildSize: 0.8,
+          builder: (context, scrollController) => EditProfileModal(
+            initialName: userName,
+            initialEmail: userEmail,
+            initialContact: userContact,
+            initialStudentNumber: userStudentNumber,
+            initialUserType: userType,
+            initialPosition: userPosition,
+            onSave: (name, email, contact, studentNumber) async {
+              await _updateProfile(name, email, contact, studentNumber);
+            },
+          ),
         ),
       );
     }
@@ -332,11 +338,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                     ],
                                   ),
-                                  child: Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.grey[600],
-                                    size: 14,
-                                  ),
+                                  // child: Icon(
+                                  //   Icons.camera_alt,
+                                  //   color: Colors.grey[600],
+                                  //   size: 14,
+                                  // ),
                                 ),
                               ),
                             ],
@@ -841,6 +847,8 @@ class _EditProfileModalState extends State<EditProfileModal> {
     TextEditingController controller, {
     TextInputType? keyboardType,
     bool enabled = true,
+    int? maxLength,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -872,6 +880,8 @@ class _EditProfileModalState extends State<EditProfileModal> {
               controller: controller,
               keyboardType: keyboardType,
               enabled: enabled,
+              maxLength: maxLength,
+              inputFormatters: inputFormatters,
               decoration: InputDecoration(
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -881,6 +891,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
                 ),
                 filled: true,
                 fillColor: enabled ? Colors.white : Colors.grey[200],
+                counterText: maxLength != null ? "" : null,
               ),
               style: const TextStyle(fontSize: 16),
             ),
@@ -891,6 +902,27 @@ class _EditProfileModalState extends State<EditProfileModal> {
   }
 
   void _saveChanges() {
+    // Validation for Full Name
+    if (nameController.text.trim().isEmpty) {
+      _showErrorSnackBar('Full Name cannot be empty');
+      return;
+    }
+
+    // Validation for Contact Number
+    if (contactController.text.trim().isEmpty) {
+      _showErrorSnackBar('Contact Number cannot be empty');
+      return;
+    }
+    if (contactController.text.length < 11) {
+      _showErrorSnackBar('Contact Number must be at least 11 digits');
+      return;
+    }
+    if (!contactController.text.startsWith('09')) {
+      _showErrorSnackBar('Please enter a valid contact number');
+      return;
+    }
+
+    // If all validations pass, proceed with saving
     widget.onSave(
       nameController.text,
       emailController.text,
@@ -902,95 +934,128 @@ class _EditProfileModalState extends State<EditProfileModal> {
     }
   }
 
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          backgroundColor: Colors.red.withOpacity(0.9),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final positionLabel = widget.initialUserType.toLowerCase() == 'student'
         ? 'Year Level'
         : 'Position';
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade900, Colors.blue.shade600],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(30)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white),
-                  onPressed: () {
-                    if (mounted) {
-                      Navigator.pop(context);
-                    }
-                  },
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade900, Colors.blue.shade600],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const Text(
-                  'Edit Profile',
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(30)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () {
+                      if (mounted) {
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                  const Text(
+                    'Edit Profile',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 40),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    _buildTextField('Full Name', nameController),
+                    _buildTextField('Email', emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        enabled: false),
+                    _buildTextField(
+                      'Contact Number',
+                      contactController,
+                      keyboardType: TextInputType.phone,
+                      maxLength: 11,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    ),
+                    _buildTextField('ID Number', studentNumberController,
+                        enabled: false),
+                    _buildTextField(positionLabel, positionController,
+                        enabled: false),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: ElevatedButton(
+                onPressed: _saveChanges,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.shade700,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  minimumSize: const Size(double.infinity, 0),
+                ),
+                child: const Text(
+                  'Save Changes',
                   style: TextStyle(
-                    fontSize: 22,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 40),
-              ],
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildTextField('Full Name', nameController),
-                  _buildTextField('Email', emailController,
-                      keyboardType: TextInputType.emailAddress, enabled: false),
-                  _buildTextField('Contact Number', contactController,
-                      keyboardType: TextInputType.phone),
-                  _buildTextField('ID Number', studentNumberController,
-                      enabled: false),
-                  _buildTextField(positionLabel, positionController,
-                      enabled: false),
-                ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: ElevatedButton(
-              onPressed: _saveChanges,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade700,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                minimumSize: const Size(double.infinity, 0),
-              ),
-              child: const Text(
-                'Save Changes',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
