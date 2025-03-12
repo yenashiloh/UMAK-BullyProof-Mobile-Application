@@ -515,7 +515,8 @@ class HistoryScreen extends StatelessWidget {
       case 'resolved':
         return const Color(0xFF1E8549).withOpacity(0.9);
       default:
-        return Colors.grey[400]!;
+        return const Color(0xFF17A2B8);
+      // return Colors.grey[400]!;
     }
   }
 
@@ -527,7 +528,8 @@ class HistoryScreen extends StatelessWidget {
       case 'resolved':
         return const Color.fromARGB(255, 255, 255, 255);
       default:
-        return Colors.grey[700]!;
+        return const Color.fromARGB(255, 255, 255, 255);
+      // return Colors.grey[700]!;
     }
   }
 }
@@ -936,7 +938,8 @@ class ReportDetailScreen extends StatelessWidget {
       case 'resolved':
         return [const Color(0xFF1E8549), const Color(0xFF2ECC71)];
       default:
-        return [Colors.grey[400]!, Colors.grey[600]!];
+        return [const Color(0xFF17A2B8), const Color.fromARGB(255, 18, 122, 138)];
+      // return [Colors.grey[400]!, Colors.grey[600]!];
     }
   }
 
@@ -948,7 +951,8 @@ class ReportDetailScreen extends StatelessWidget {
       case 'resolved':
         return Colors.white;
       default:
-        return Colors.grey[700]!;
+        return Colors.white;
+      // return Colors.grey[700]!;
     }
   }
 }
