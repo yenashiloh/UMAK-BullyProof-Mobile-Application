@@ -5,7 +5,7 @@ import 'package:bully_proof_umak/components/user_textfield.dart';
 import 'package:bully_proof_umak/config.dart';
 import 'package:bully_proof_umak/main.dart';
 import 'package:bully_proof_umak/pages/registration_page.dart';
-import 'package:bully_proof_umak/pages/forgot_password_page.dart'; // New import
+import 'package:bully_proof_umak/pages/forgot_password_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,6 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool isEmailEmpty = false;
   bool isPasswordEmpty = false;
+  bool isLoading = false;
   late SharedPreferences prefs;
 
   @override
@@ -55,6 +56,9 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       isEmailEmpty = emailController.text.isEmpty;
       isPasswordEmpty = passwordController.text.isEmpty;
+      if (!isEmailEmpty && !isPasswordEmpty) {
+        isLoading = true;
+      }
     });
 
     if (!isEmailEmpty && !isPasswordEmpty) {
@@ -63,43 +67,49 @@ class _LoginPageState extends State<LoginPage> {
         "password": passwordController.text,
       };
 
-      var response = await http.post(
-        Uri.parse(login),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(regBody),
-      );
-
-      var jsonResponse = jsonDecode(response.body);
-
-      if (jsonResponse['status']) {
-        var myToken = jsonResponse['token'];
-        prefs.setString('token', myToken);
-
-        Map<String, dynamic> decodedToken = JwtDecoder.decode(myToken);
-        print('Decoded Token: $decodedToken');
-
-        _successMessage(context);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(
-              token: myToken,
-            ),
-          ),
+      try {
+        var response = await http.post(
+          Uri.parse(login),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode(regBody),
         );
-      } else {
-        _errorMessage(context, jsonResponse['message'] ?? "Login Failed");
+
+        var jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['status']) {
+          var myToken = jsonResponse['token'];
+          prefs.setString('token', myToken);
+
+          Map<String, dynamic> decodedToken = JwtDecoder.decode(myToken);
+          print('Decoded Token: $decodedToken');
+
+          _successMessage(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(
+                token: myToken,
+              ),
+            ),
+          );
+        } else {
+          _errorMessage(context, jsonResponse['message'] ?? "Login Failed");
+        }
+      } catch (e) {
+        _errorMessage(context, "An error occurred. Please try again.");
+      } finally {
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
       }
-    } else {
-      setState(() {
-        isEmailEmpty = emailController.text.isEmpty;
-        isPasswordEmpty = passwordController.text.isEmpty;
-      });
     }
   }
 
   void _successMessage(BuildContext context,
       [String message = 'Login successful!']) {
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Container(
@@ -175,6 +185,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _errorMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Container(
@@ -268,22 +279,22 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 50),
                   Center(
-                          child: ShaderMask(
-                            shaderCallback: (bounds) => const LinearGradient(
-                              colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ).createShader(bounds),
-                            child: const Text(
-                              "BullyProof",
-                              style: TextStyle(
-                                fontSize: 25,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                    child: ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: const Text(
+                        "BullyProof",
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
                         ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 5),
                   const Text(
                     "Please login to continue using our app",
@@ -321,7 +332,8 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
                   LoginBtn(
                     onPressed: loginUser,
-                    text: 'Login',
+                    text: "Login",
+                    isLoading: isLoading,
                   ),
                   const SizedBox(height: 20),
                   GestureDetector(
@@ -331,7 +343,7 @@ class _LoginPageState extends State<LoginPage> {
                         MaterialPageRoute(
                             builder: (context) => const ForgotPasswordPage()),
                       );
-                    }, // Navigate to ForgotPasswordPage
+                    },
                     child: const Text(
                       "Forgot password?",
                       style: TextStyle(color: Color(0xFF7A7A7A), fontSize: 16),

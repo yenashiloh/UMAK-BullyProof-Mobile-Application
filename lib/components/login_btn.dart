@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 
 class LoginBtn extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed; // Made nullable to disable when loading
   final String text;
+  final bool isLoading; // Added to toggle loading state
 
-  const LoginBtn(
-      {super.key,
-      required this.onPressed,
-      this.text = "Login"});
+  const LoginBtn({
+    super.key,
+    required this.onPressed,
+    this.text = "Login",
+    this.isLoading = false, // Default to false
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onPressed,
+      onTap: isLoading ? null : onPressed, // Disable tap when loading
       child: Container(
         padding: const EdgeInsets.all(15),
         margin: const EdgeInsets.symmetric(horizontal: 25),
@@ -25,13 +28,22 @@ class LoginBtn extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-            ),
-          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  ),
+                )
+              : Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                  ),
+                ),
         ),
       ),
     );
