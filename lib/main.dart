@@ -1,10 +1,10 @@
 import 'package:bully_proof_umak/config.dart';
 import 'package:bully_proof_umak/screens/history/history_screen.dart';
+import 'package:bully_proof_umak/screens/forms/forms_screen.dart'; // Import the forms screen
 import 'package:bully_proof_umak/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home/home_screen.dart';
-import 'screens/report-incidents/report_screen.dart';
 import 'screens/notifications/notification_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -336,15 +336,17 @@ class HomePageState extends State<HomePage> {
         children: [
           HomeScreen(
             onReportButtonPressed: () {
-              _onPageSelected(1);
+              _onPageSelected(1); // Navigate to Forms which has Report functionality
             },
             onSeekHelpButtonPressed: () {
-              _onPageSelected(2);
+              _onPageSelected(1); // Also navigate to Forms
             },
             fullName: fullName,
           ),
-          // In HomePage's build method, update the ReportScreen creation:
-          ReportScreen(
+          // Combined Forms & Report Screen
+          FormsScreen(
+            token: token,
+            userId: userId,
             onNavigateToHistory: () {
               setState(() {
                 _currentIndex = 2; // Index for History screen
@@ -352,6 +354,7 @@ class HomePageState extends State<HomePage> {
               _fetchUserReportData(userId); // Fetch the latest data
             },
           ),
+          // History screen
           HistoryScreen(
             reports: _userReports,
             token: widget.token,
@@ -393,8 +396,8 @@ class HomePageState extends State<HomePage> {
           _buildBottomNavigationBarItem(
             index: 1,
             icon: const Icon(Icons.description_outlined),
-            activeIcon: const Icon(Icons.description_outlined),
-            label: 'Report',
+            activeIcon: const Icon(Icons.description),
+            label: 'Forms',
           ),
           _buildBottomNavigationBarItem(
             index: 2,
@@ -457,13 +460,13 @@ class HomePageState extends State<HomePage> {
     });
 
     switch (index) {
-      case 2:
+      case 2: // History
         _fetchUserReportData(userId);
         break;
-      case 3:
+      case 3: // Notifications
         _fetchUserNotificationData(userId);
         break;
-      case 4:
+      case 4: // Profile
         _fetchUserData(userId);
         break;
       default:

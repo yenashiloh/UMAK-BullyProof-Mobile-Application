@@ -573,7 +573,7 @@ class _ReportScreenState extends State<ReportScreen> {
                             onPressed: () {
                               setState(() {
                                 _clearFormInputs();
-                                _showSuccessDialog = false;
+                                Navigator.pop(context);
                                 widget.onNavigateToHistory?.call();
                               });
                             },
