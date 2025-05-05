@@ -1,9 +1,13 @@
+// screens/forms/forms_screen.dart
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bully_proof_umak/config.dart';
 import 'package:bully_proof_umak/screens/report-incidents/report_screen.dart';
+import 'package:bully_proof_umak/models/form_model.dart';
+import 'package:bully_proof_umak/services/form_service.dart';
+import 'package:bully_proof_umak/screens/forms/form_view_screen.dart';
 
 class FormsScreen extends StatefulWidget {
   final String? token;
@@ -11,7 +15,7 @@ class FormsScreen extends StatefulWidget {
   final VoidCallback? onNavigateToHistory;
 
   const FormsScreen({
-    super.key, 
+    super.key,
     this.token,
     this.userId,
     this.onNavigateToHistory,
@@ -23,7 +27,7 @@ class FormsScreen extends StatefulWidget {
 
 class _FormsScreenState extends State<FormsScreen> {
   bool _isLoading = false;
-  List<Map<String, dynamic>> _forms = [];
+  List<FormModel> _forms = [];
 
   @override
   void initState() {
@@ -32,68 +36,24 @@ class _FormsScreenState extends State<FormsScreen> {
   }
 
   Future<void> _fetchForms() async {
+    if (widget.token == null) return;
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Replace this with actual API endpoint when available
-      final formsUrl = '${url}forms';
-      
-      final response = await http.get(
-        Uri.parse(formsUrl),
-        headers: {
-          'Authorization': 'Bearer ${widget.token}',
-        },
-      );
+      final forms = await FormService.fetchForms(widget.token!);
 
-      if (response.statusCode == 200) {
-        // Uncomment and adjust when API is available
-        // final List<dynamic> forms = json.decode(response.body);
-        // setState(() {
-        //   _forms = List<Map<String, dynamic>>.from(forms);
-        //   _isLoading = false;
-        // });
-        
-        // For now, use mock data
-        setState(() {
-          _forms = [
-            {
-              'id': '1',
-              'title': 'Counseling Request Form',
-              'description': 'Request counseling services for cyberbullying incidents.',
-              'type': 'counseling',
-              'url': 'https://example.com/counseling-form',
-            },
-            {
-              'id': '2',
-              'title': 'Incident Follow-up Form',
-              'description': 'Provide additional information for an existing report.',
-              'type': 'follow-up',
-              'url': 'https://example.com/follow-up-form',
-            },
-            {
-              'id': '3',
-              'title': 'Anonymous Tip Form',
-              'description': 'Submit information about potential cyberbullying incidents anonymously.',
-              'type': 'anonymous',
-              'url': 'https://example.com/anonymous-form',
-            },
-          ];
-          _isLoading = false;
-        });
-      } else {
-        // Handle error response
-        setState(() {
-          _isLoading = false;
-        });
-        _showErrorMessage('Failed to load forms. Please try again later.');
-      }
+      setState(() {
+        _forms = forms;
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      _showErrorMessage('Error: $e');
+      _showErrorMessage('Failed to load forms. Please try again later.');
     }
   }
 
@@ -107,19 +67,13 @@ class _FormsScreenState extends State<FormsScreen> {
     );
   }
 
-  void _openForm(String url) {
-    // For now, just show a message
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening form: $url'),
-        behavior: SnackBarBehavior.floating,
+  void _openForm(FormModel form) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FormViewScreen(form: form),
       ),
     );
-    
-    // In a real implementation, you could:
-    // 1. Open an in-app webview
-    // 2. Launch a URL
-    // 3. Navigate to another screen with a form
   }
 
   void _navigateToReportScreen() {
@@ -160,14 +114,13 @@ class _FormsScreenState extends State<FormsScreen> {
           ),
         ),
       ),
-      // Floating action button removed as requested
-      body: _isLoading 
-        ? const Center(
-            child: CircularProgressIndicator(
-              color: Color(0xFF1A4594),
-            ),
-          )
-        : _buildContent(),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFF1A4594),
+              ),
+            )
+          : _buildContent(),
     );
   }
 
@@ -189,9 +142,7 @@ class _FormsScreenState extends State<FormsScreen> {
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: _forms.isEmpty
-                ? _buildEmptyView()
-                : _buildFormsList(),
+            child: _forms.isEmpty ? _buildEmptyView() : _buildFormsList(),
           ),
         ],
       ),
@@ -253,7 +204,8 @@ class _FormsScreenState extends State<FormsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFB731),
                 foregroundColor: const Color(0xFF1A4594),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 textStyle: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -309,76 +261,93 @@ class _FormsScreenState extends State<FormsScreen> {
       },
     );
   }
-
-  Widget _buildFormCard(Map<String, dynamic> form) {
-    final IconData iconData = _getIconForFormType(form['type']);
+  
+  Widget _buildFormCard(FormModel form) {
+    final IconData iconData = _getIconForFormType(form.title);
     
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
-      elevation: 2,
+      elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: InkWell(
-        onTap: () => _openForm(form['url']),
+        onTap: () => _openForm(form),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Icon container with better styling
               Container(
-                width: 60,
-                height: 60,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A4594).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFF0F4FA),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   iconData,
-                  size: 32,
+                  size: 24,
                   color: const Color(0xFF1A4594),
                 ),
               ),
               const SizedBox(width: 16),
+              // Text content
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      form['title'],
+                      form.title,
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                         color: Color(0xFF1A4594),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
-                      form['description'],
+                      form.description,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _openForm(form['url']),
-                        icon: const Icon(Icons.open_in_new, size: 16),
-                        label: const Text('Open Form'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFB731),
-                          foregroundColor: const Color(0xFF1A4594),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
+                ),
+              ),
+              // Button with consistent styling
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => _openForm(form),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFB731),
+                    foregroundColor: const Color(0xFF1A4594),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16, 
+                      vertical: 8
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Open Form',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -389,15 +358,16 @@ class _FormsScreenState extends State<FormsScreen> {
   }
 
   IconData _getIconForFormType(String type) {
-    switch (type) {
-      case 'counseling':
-        return Icons.psychology_outlined;
-      case 'follow-up':
-        return Icons.follow_the_signs_outlined;
-      case 'anonymous':
-        return Icons.person_outline;
-      default:
-        return Icons.description_outlined;
+    final String typeLower = type.toLowerCase();
+    
+    if (typeLower.contains('counseling')) {
+      return Icons.psychology_outlined;
+    } else if (typeLower.contains('follow-up') || typeLower.contains('follow up')) {
+      return Icons.follow_the_signs_outlined;
+    } else if (typeLower.contains('anonymous') || typeLower.contains('tip')) {
+      return Icons.person_outline;
+    } else {
+      return Icons.description_outlined;
     }
   }
-} 
+}

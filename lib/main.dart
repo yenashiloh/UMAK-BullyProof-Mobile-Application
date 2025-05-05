@@ -1,6 +1,6 @@
 import 'package:bully_proof_umak/config.dart';
 import 'package:bully_proof_umak/screens/history/history_screen.dart';
-import 'package:bully_proof_umak/screens/forms/forms_screen.dart'; // Import the forms screen
+import 'package:bully_proof_umak/screens/forms/forms_screen.dart';
 import 'package:bully_proof_umak/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -342,6 +342,7 @@ class HomePageState extends State<HomePage> {
               _onPageSelected(1); // Also navigate to Forms
             },
             fullName: fullName,
+            token: token,
           ),
           // Combined Forms & Report Screen
           FormsScreen(
