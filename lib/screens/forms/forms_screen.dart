@@ -71,7 +71,11 @@ class _FormsScreenState extends State<FormsScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FormViewScreen(form: form),
+        builder: (context) => FormViewScreen(
+          form: form,
+          token: widget.token ?? '',
+          userId: widget.userId ?? '',
+        ),
       ),
     );
   }
@@ -261,10 +265,10 @@ class _FormsScreenState extends State<FormsScreen> {
       },
     );
   }
-  
+
   Widget _buildFormCard(FormModel form) {
     final IconData iconData = _getIconForFormType(form.title);
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
       elevation: 1,
@@ -335,10 +339,8 @@ class _FormsScreenState extends State<FormsScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16, 
-                      vertical: 8
-                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     elevation: 0,
                   ),
                   child: const Text(
@@ -359,10 +361,11 @@ class _FormsScreenState extends State<FormsScreen> {
 
   IconData _getIconForFormType(String type) {
     final String typeLower = type.toLowerCase();
-    
+
     if (typeLower.contains('counseling')) {
       return Icons.psychology_outlined;
-    } else if (typeLower.contains('follow-up') || typeLower.contains('follow up')) {
+    } else if (typeLower.contains('follow-up') ||
+        typeLower.contains('follow up')) {
       return Icons.follow_the_signs_outlined;
     } else if (typeLower.contains('anonymous') || typeLower.contains('tip')) {
       return Icons.person_outline;

@@ -6,7 +6,7 @@ import 'package:bully_proof_umak/models/form_model.dart';
 
 class FormService {
   static const String formsEndpoint = '${url}forms';
-  
+
   static Future<List<FormModel>> fetchForms(String token) async {
     try {
       final response = await http.get(
@@ -29,7 +29,7 @@ class FormService {
       return [];
     }
   }
-  
+
   static Future<FormModel?> fetchFormById(String token, String formId) async {
     try {
       final response = await http.get(
@@ -49,6 +49,29 @@ class FormService {
     } catch (e) {
       print('Error fetching form: $e');
       return null;
+    }
+  }
+
+  static Future<bool> submitFormData(
+      String token, Map<String, dynamic> formData) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$formsEndpoint/submit'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(formData),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('Failed to submit form: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error submitting form: $e');
+      return false;
     }
   }
 }
