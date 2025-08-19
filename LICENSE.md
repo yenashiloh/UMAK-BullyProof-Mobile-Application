@@ -40,4 +40,4 @@ SOFTWARE.
     <li>Adaptation for other institutions should consider local policies and requirements</li>
     <li>The UMAK email authentication system is integral to the security model</li>
 </ul>
-<p>For questions regarding licensing, permissions, or academic use, please contact the University of Makati IT Department or the project maintainers.</p>
+
