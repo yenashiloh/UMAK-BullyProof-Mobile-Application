@@ -17,13 +17,13 @@
 </ul>
 <h2>✨ <strong>KEY FEATURES</strong></h2>
 <br>
-<h3>🔐 1. User Authentication</h3>
+<h3>1. User Authentication</h3>
 <ul>
     <li>Secure account creation and login system</li>
     <li>Required information: Full name, UMAK email, contact number, and password</li>
     <li>Ensures only authorized university community members can access the system</li>
 </ul>
-<h3>📝 2. Incident Reporting</h3>
+<h3>2. Incident Reporting</h3>
 <ul>
     <li>Comprehensive incident reporting through an intuitive mobile interface</li>
     <li>Detailed information collection including:
@@ -34,13 +34,13 @@
         </ul>
     </li>
 </ul>
-<h3>🔍 3. Image-to-Text Conversion</h3>
+<h3>3. Image-to-Text Conversion</h3>
 <ul>
     <li>Advanced OCR (Optical Character Recognition) technology</li>
     <li>Convert uploaded images (screenshots of messages, posts, etc.) into readable text</li>
     <li>Streamlines the evidence submission process</li>
 </ul>
-<h3>🔔 4. Real-time Notifications</h3>
+<h3>4. Real-time Notifications</h3>
 <ul>
     <li>Instant updates on report status for complainants</li>
     <li>Keep users informed about:
@@ -51,7 +51,7 @@
         </ul>
     </li>
 </ul>
-<h3>📊 5. Incident History</h3>
+<h3>5. Incident History</h3>
 <ul>
     <li>Complete record of all previously submitted reports</li>
     <li>Track essential details:
@@ -76,12 +76,11 @@
 <br>
 <h3>Languages & Frameworks</h3>
 <ul>
-    <li><strong>Dart</strong> (95.5%) - Primary development language</li>
-    <li><strong>CMake</strong> (2.2%) - Build system configuration</li>
-    <li><strong>C++</strong> (1.2%) - Native platform integration</li>
-    <li><strong>Swift</strong> (0.6%) - iOS-specific functionality</li>
-    <li><strong>HTML</strong> (0.3%) - Web view components</li>
-    <li><strong>C</strong> (0.2%) - Low-level system operations</li>
+    <li>Dart</li>
+    <li>CMake</li>
+    <li>C++</li>
+    <li>Swift</li>
+    <li>C</li>
 </ul>
 <h3>Platform</h3>
 <ul>
