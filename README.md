@@ -3,6 +3,12 @@
 <p><strong>University of Makati</strong> recognizes the critical importance of creating a safe digital environment for its academic community. As cyberbullying becomes increasingly prevalent in educational institutions, UMAK requires effective tools to identify, report, and address these incidents while maintaining the highest standards of confidentiality and support for affected individuals.</p>
 <p>The university's commitment to student and employee welfare extends to digital spaces, requiring a robust system that can handle incident reporting, automated classification, and comprehensive case management while ensuring accessibility and user-friendly operations across the entire university community.</p>
 <p>This comprehensive mobile application was developed to combat cyberbullying within the University of Makati community by providing a secure and efficient incident reporting system. The app leverages machine learning technology, specifically a <strong>Logistic Regression Algorithm</strong>, to automatically classify reported incidents based on content analysis of both English and Tagalog phrases, fostering a safe and supportive environment for all community members.</p>
+<div align="center">
+
+  <img src="https://github.com/yenashiloh/UMAK-BullyProof-Mobile-Application/blob/main/assets/bullyproof%20-%201.png" alt="Hero Section" width="800">
+  <br><br>
+</div>
+
 <h2>📱 <strong>PROJECT OVERVIEW</strong></h2>
 <br>
 <p><strong>BullyProof</strong> is a Flutter-based mobile application that enables students and employees at the University of Makati to report cyberbullying incidents safely and effectively. The application incorporates advanced machine learning capabilities to analyze and classify reported incidents, streamlining the identification and resolution process for university administrators.</p>
