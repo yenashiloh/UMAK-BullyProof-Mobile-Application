@@ -170,13 +170,12 @@ bullyproof/
 </ul>
 <h2>📄 <strong>LICENSE</strong></h2>
 <br>
-<p>This project is licensed under the MIT License - see the <a href="LICENSE">LICENSE</a> file for details.</p>
+<p>This project is licensed under the MIT License - see the <a href="https://github.com/yenashiloh/UMAK-BullyProof-Mobile-Application/blob/main/LICENSE.md">LICENSE</a> file for details.</p>
 <h2>🙏 <strong>ACKNOWLEDGMENTS</strong></h2>
 <br>
 <ul>
     <li>University of Makati Administration for supporting this initiative</li>
     <li>Students and staff who provided feedback during development</li>
-    <li>The Flutter and Dart communities for excellent documentation and support</li>
 </ul>
 </body>
 </html>
